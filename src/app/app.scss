@@ -1,0 +1,237 @@
+// ── Toolbar ────────────────────────────────────────────────────────────────
+.toolbar-title {
+  margin-left: 10px;
+  font-size: 1.15rem;
+  font-weight: 500;
+}
+
+.toolbar-badge {
+  font-size: 0.8rem;
+  opacity: 0.75;
+  letter-spacing: 0.5px;
+}
+
+.spacer { flex: 1; }
+
+// ── Layout ──────────────────────────────────────────────────────────────────
+.container {
+  max-width: 1100px;
+  margin: 28px auto;
+  padding: 0 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+// ── Spec card ────────────────────────────────────────────────────────────────
+.spec-card {
+  mat-card-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 12px 16px 16px;
+
+    .generate-btn { margin-left: auto; }
+  }
+}
+
+// ── Drop zone ────────────────────────────────────────────────────────────────
+.drop-zone {
+  border: 2px dashed var(--mat-sys-outline-variant);
+  border-radius: 8px;
+  min-height: 180px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: border-color 150ms, background-color 150ms;
+  overflow: hidden;
+
+  &.drag-over {
+    border-color: var(--mat-sys-primary);
+    background-color: color-mix(in srgb, var(--mat-sys-primary) 6%, transparent);
+  }
+
+  &.has-content {
+    align-items: flex-start;
+    justify-content: flex-start;
+    cursor: default;
+    border-style: solid;
+  }
+}
+
+.drop-hint {
+  text-align: center;
+  color: var(--mat-sys-on-surface-variant);
+  padding: 24px;
+
+  .drop-icon {
+    font-size: 52px;
+    width: 52px;
+    height: 52px;
+    margin-bottom: 12px;
+    opacity: 0.4;
+  }
+
+  .drop-main { margin: 4px 0; font-size: 1rem; }
+  .drop-sub  { margin: 4px 0; font-size: 0.82rem; opacity: 0.7; }
+}
+
+// ── Spec preview ─────────────────────────────────────────────────────────────
+.spec-preview {
+  width: 100%;
+  padding: 16px;
+
+  .spec-filename {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 500;
+    color: var(--mat-sys-primary);
+    margin-bottom: 12px;
+  }
+
+  .spec-content {
+    max-height: 280px;
+    overflow: auto;
+    background: var(--mat-sys-surface-variant);
+    color: var(--mat-sys-on-surface-variant);
+    padding: 12px 14px;
+    border-radius: 6px;
+    font-size: 0.78rem;
+    line-height: 1.55;
+    margin: 0;
+    white-space: pre;
+    font-family: 'Cascadia Code', Consolas, 'Courier New', monospace;
+  }
+}
+
+// ── Output card ───────────────────────────────────────────────────────────────
+.output-card {
+  mat-card-header {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .header-actions { margin-left: auto; }
+}
+
+// ── Tab icons ─────────────────────────────────────────────────────────────────
+.tab-icon {
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+  margin-right: 6px;
+  vertical-align: middle;
+}
+
+// ── Options card ─────────────────────────────────────────────────────────────
+.options-card {
+  .options-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 12px 24px;
+    padding: 4px 0 16px;
+  }
+
+  .option-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .option-icon {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+    opacity: 0.65;
+  }
+
+  mat-divider { margin: 4px 0 16px; }
+
+  .split-toggle {
+    padding: 4px 0;
+
+    .split-hint {
+      margin: 8px 0 0;
+      font-size: 0.78rem;
+      color: var(--mat-sys-on-surface-variant);
+      opacity: 0.8;
+    }
+  }
+}
+
+// ── File picker (split mode) ──────────────────────────────────────────────────
+.file-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 12px 0 8px;
+
+  button {
+    font-size: 0.78rem;
+    height: 32px;
+    line-height: 32px;
+    padding: 0 10px;
+
+    mat-icon {
+      font-size: 15px;
+      width: 15px;
+      height: 15px;
+      margin-right: 4px;
+      vertical-align: middle;
+    }
+
+    &.file-active {
+      background: color-mix(in srgb, var(--mat-sys-primary) 12%, transparent);
+      border-color: var(--mat-sys-primary);
+      color: var(--mat-sys-primary);
+    }
+  }
+}
+
+// ── Tab count badge ────────────────────────────────────────────────────────────
+.tab-count {
+  margin-left: 4px;
+  font-size: 0.75rem;
+  opacity: 0.7;
+}
+
+// ── Code panel ────────────────────────────────────────────────────────────────
+.code-panel {
+  position: relative;
+  margin-top: 4px;
+}
+
+.code-actions {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 2;
+  display: flex;
+  gap: 2px;
+  background: rgba(30, 30, 30, 0.7);
+  border-radius: 6px;
+  padding: 2px;
+
+  button { color: #ccc; }
+}
+
+.code-block {
+  background: #1e1e1e;
+  color: #d4d4d4;
+  padding: 20px 16px;
+  border-radius: 6px;
+  font-family: 'Cascadia Code', Consolas, 'Courier New', monospace;
+  font-size: 0.82rem;
+  line-height: 1.65;
+  overflow: auto;
+  max-height: 520px;
+  white-space: pre;
+  margin: 0;
+  tab-size: 4;
+
+  code { font-family: inherit; }
+}

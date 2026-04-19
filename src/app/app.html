@@ -1,0 +1,304 @@
+<mat-toolbar color="primary">
+  <mat-icon>api</mat-icon>
+  <span class="toolbar-title">OpenAPI Code Generator</span>
+  <span class="spacer"></span>
+  <span class="toolbar-badge">C# &bull; TypeScript &bull; Zod</span>
+</mat-toolbar>
+
+<div class="container">
+
+  <!-- ── Spec Upload Card ──────────────────────────────────────── -->
+  <mat-card class="spec-card">
+    <mat-card-header>
+      <mat-card-title>OpenAPI Specification</mat-card-title>
+      <mat-card-subtitle>Upload a YAML or JSON file, or use Load Example</mat-card-subtitle>
+    </mat-card-header>
+
+    <mat-card-content>
+      <div
+        class="drop-zone"
+        [class.drag-over]="isDragOver()"
+        [class.has-content]="specContent()"
+        (dragover)="onDragOver($event)"
+        (dragleave)="onDragLeave()"
+        (drop)="onDrop($event)"
+        (click)="specContent() ? null : fileInput.click()"
+      >
+        @if (specContent()) {
+          <div class="spec-preview">
+            <div class="spec-filename">
+              <mat-icon>description</mat-icon>
+              <span>{{ specFilename() }}</span>
+            </div>
+            <pre class="spec-content">{{ specContent() }}</pre>
+          </div>
+        } @else {
+          <div class="drop-hint">
+            <mat-icon class="drop-icon">cloud_upload</mat-icon>
+            <p class="drop-main">Drag &amp; drop your OpenAPI spec here</p>
+            <p class="drop-sub">or click to browse &bull; supports .yaml, .yml, .json</p>
+          </div>
+        }
+      </div>
+    </mat-card-content>
+
+    <mat-card-actions>
+      <button mat-raised-button color="primary" (click)="fileInput.click()">
+        <mat-icon>upload_file</mat-icon>
+        Upload Spec
+      </button>
+      <input #fileInput type="file" accept=".yaml,.yml,.json" hidden (change)="onFileSelected($event)" />
+
+      <button mat-stroked-button (click)="loadExample()">
+        <mat-icon>auto_awesome</mat-icon>
+        Load Example
+      </button>
+
+      @if (specContent()) {
+        <button mat-stroked-button (click)="downloadSpec()">
+          <mat-icon>download</mat-icon>
+          Download Spec
+        </button>
+
+        <button mat-raised-button color="accent" class="generate-btn"
+                [disabled]="!hasAnyOption()"
+                (click)="generate()">
+          <mat-icon>code</mat-icon>
+          Generate Code
+        </button>
+      }
+    </mat-card-actions>
+  </mat-card>
+
+  <!-- ── Generation Options Card ──────────────────────────────── -->
+  <mat-card class="options-card">
+    <mat-card-header>
+      <mat-card-title>Generation Options</mat-card-title>
+      <mat-card-subtitle>Choose which artifacts to generate</mat-card-subtitle>
+    </mat-card-header>
+
+    <mat-card-content>
+      <div class="options-grid">
+        <mat-checkbox
+          [checked]="options().includeCsharpDtos"
+          (change)="setOption('includeCsharpDtos', $event.checked)">
+          <span class="option-label">
+            <mat-icon class="option-icon">data_object</mat-icon>
+            C# DTOs
+          </span>
+        </mat-checkbox>
+
+        <mat-checkbox
+          [checked]="options().includeCsharpControllers"
+          (change)="setOption('includeCsharpControllers', $event.checked)">
+          <span class="option-label">
+            <mat-icon class="option-icon">account_tree</mat-icon>
+            C# Controllers
+          </span>
+        </mat-checkbox>
+
+        <mat-checkbox
+          [checked]="options().includeTypescriptSchemas"
+          (change)="setOption('includeTypescriptSchemas', $event.checked)">
+          <span class="option-label">
+            <mat-icon class="option-icon">verified</mat-icon>
+            TypeScript Schemas (Zod)
+          </span>
+        </mat-checkbox>
+
+        <mat-checkbox
+          [checked]="options().includeTypescriptServices"
+          (change)="setOption('includeTypescriptServices', $event.checked)">
+          <span class="option-label">
+            <mat-icon class="option-icon">http</mat-icon>
+            Angular HTTP Services
+          </span>
+        </mat-checkbox>
+      </div>
+
+      <mat-divider></mat-divider>
+
+      <div class="split-toggle">
+        <mat-slide-toggle
+          [checked]="options().splitFiles"
+          (change)="setOption('splitFiles', $event.checked)">
+          Split output into separate files per tag / schema
+        </mat-slide-toggle>
+        @if (options().splitFiles) {
+          <p class="split-hint">
+            C# DTOs → one .cs per schema &bull;
+            C# Controllers → one .cs per tag &bull;
+            TS Schemas → one .schema.ts per schema + index.ts barrel &bull;
+            TS Services → one .ts per tag
+          </p>
+        }
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- ── Generated Code Card ──────────────────────────────────── -->
+  @if (result()) {
+    <mat-card class="output-card">
+      <mat-card-header>
+        <mat-card-title>Generated Code</mat-card-title>
+        <div class="header-actions">
+          <button mat-raised-button color="accent" (click)="downloadAll()">
+            <mat-icon>folder_zip</mat-icon>
+            Download All (ZIP)
+          </button>
+        </div>
+      </mat-card-header>
+
+      <mat-card-content>
+        <mat-tab-group animationDuration="150ms">
+
+          @if (result()!.csharpDtoFiles.length > 0) {
+            <mat-tab>
+              <ng-template mat-tab-label>
+                <mat-icon class="tab-icon">data_object</mat-icon>
+                C# DTOs
+                @if (result()!.csharpDtoFiles.length > 1) {
+                  <span class="tab-count">({{ result()!.csharpDtoFiles.length }})</span>
+                }
+              </ng-template>
+              <div class="code-panel">
+                @if (result()!.csharpDtoFiles.length > 1) {
+                  <div class="file-picker">
+                    @for (f of result()!.csharpDtoFiles; track f.filename; let i = $index) {
+                      <button mat-stroked-button [class.file-active]="selectedDtoFile() === i"
+                              (click)="selectedDtoFile.set(i)">
+                        <mat-icon>description</mat-icon>{{ f.filename }}
+                      </button>
+                    }
+                  </div>
+                }
+                @let dtoFile = result()!.csharpDtoFiles[selectedDtoFile()];
+                <div class="code-actions">
+                  <button mat-icon-button matTooltip="Copy to clipboard"
+                          (click)="copyToClipboard(dtoFile.content)">
+                    <mat-icon>content_copy</mat-icon>
+                  </button>
+                  <button mat-icon-button [matTooltip]="'Download ' + dtoFile.filename"
+                          (click)="downloadFile(dtoFile.content, dtoFile.filename)">
+                    <mat-icon>download</mat-icon>
+                  </button>
+                </div>
+                <pre class="code-block"><code>{{ dtoFile.content }}</code></pre>
+              </div>
+            </mat-tab>
+          }
+
+          @if (result()!.csharpControllerFiles.length > 0) {
+            <mat-tab>
+              <ng-template mat-tab-label>
+                <mat-icon class="tab-icon">account_tree</mat-icon>
+                C# Controllers
+                @if (result()!.csharpControllerFiles.length > 1) {
+                  <span class="tab-count">({{ result()!.csharpControllerFiles.length }})</span>
+                }
+              </ng-template>
+              <div class="code-panel">
+                @if (result()!.csharpControllerFiles.length > 1) {
+                  <div class="file-picker">
+                    @for (f of result()!.csharpControllerFiles; track f.filename; let i = $index) {
+                      <button mat-stroked-button [class.file-active]="selectedControllerFile() === i"
+                              (click)="selectedControllerFile.set(i)">
+                        <mat-icon>description</mat-icon>{{ f.filename }}
+                      </button>
+                    }
+                  </div>
+                }
+                @let ctrlFile = result()!.csharpControllerFiles[selectedControllerFile()];
+                <div class="code-actions">
+                  <button mat-icon-button matTooltip="Copy to clipboard"
+                          (click)="copyToClipboard(ctrlFile.content)">
+                    <mat-icon>content_copy</mat-icon>
+                  </button>
+                  <button mat-icon-button [matTooltip]="'Download ' + ctrlFile.filename"
+                          (click)="downloadFile(ctrlFile.content, ctrlFile.filename)">
+                    <mat-icon>download</mat-icon>
+                  </button>
+                </div>
+                <pre class="code-block"><code>{{ ctrlFile.content }}</code></pre>
+              </div>
+            </mat-tab>
+          }
+
+          @if (result()!.typescriptSchemaFiles.length > 0) {
+            <mat-tab>
+              <ng-template mat-tab-label>
+                <mat-icon class="tab-icon">verified</mat-icon>
+                TypeScript Schemas (Zod)
+                @if (result()!.typescriptSchemaFiles.length > 1) {
+                  <span class="tab-count">({{ result()!.typescriptSchemaFiles.length }})</span>
+                }
+              </ng-template>
+              <div class="code-panel">
+                @if (result()!.typescriptSchemaFiles.length > 1) {
+                  <div class="file-picker">
+                    @for (f of result()!.typescriptSchemaFiles; track f.filename; let i = $index) {
+                      <button mat-stroked-button [class.file-active]="selectedSchemaFile() === i"
+                              (click)="selectedSchemaFile.set(i)">
+                        <mat-icon>description</mat-icon>{{ f.filename }}
+                      </button>
+                    }
+                  </div>
+                }
+                @let schemaFile = result()!.typescriptSchemaFiles[selectedSchemaFile()];
+                <div class="code-actions">
+                  <button mat-icon-button matTooltip="Copy to clipboard"
+                          (click)="copyToClipboard(schemaFile.content)">
+                    <mat-icon>content_copy</mat-icon>
+                  </button>
+                  <button mat-icon-button [matTooltip]="'Download ' + schemaFile.filename"
+                          (click)="downloadFile(schemaFile.content, schemaFile.filename)">
+                    <mat-icon>download</mat-icon>
+                  </button>
+                </div>
+                <pre class="code-block"><code>{{ schemaFile.content }}</code></pre>
+              </div>
+            </mat-tab>
+          }
+
+          @if (result()!.typescriptServiceFiles.length > 0) {
+            <mat-tab>
+              <ng-template mat-tab-label>
+                <mat-icon class="tab-icon">http</mat-icon>
+                Angular HTTP Services
+                @if (result()!.typescriptServiceFiles.length > 1) {
+                  <span class="tab-count">({{ result()!.typescriptServiceFiles.length }})</span>
+                }
+              </ng-template>
+              <div class="code-panel">
+                @if (result()!.typescriptServiceFiles.length > 1) {
+                  <div class="file-picker">
+                    @for (f of result()!.typescriptServiceFiles; track f.filename; let i = $index) {
+                      <button mat-stroked-button [class.file-active]="selectedServiceFile() === i"
+                              (click)="selectedServiceFile.set(i)">
+                        <mat-icon>description</mat-icon>{{ f.filename }}
+                      </button>
+                    }
+                  </div>
+                }
+                @let svcFile = result()!.typescriptServiceFiles[selectedServiceFile()];
+                <div class="code-actions">
+                  <button mat-icon-button matTooltip="Copy to clipboard"
+                          (click)="copyToClipboard(svcFile.content)">
+                    <mat-icon>content_copy</mat-icon>
+                  </button>
+                  <button mat-icon-button [matTooltip]="'Download ' + svcFile.filename"
+                          (click)="downloadFile(svcFile.content, svcFile.filename)">
+                    <mat-icon>download</mat-icon>
+                  </button>
+                </div>
+                <pre class="code-block"><code>{{ svcFile.content }}</code></pre>
+              </div>
+            </mat-tab>
+          }
+
+        </mat-tab-group>
+      </mat-card-content>
+    </mat-card>
+  }
+
+</div>
