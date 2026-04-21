@@ -184,7 +184,7 @@ export class App {
     includeCsharpControllers: true,
     includeTypescriptSchemas: true,
     includeTypescriptServices: true,
-    splitFiles: false,
+    splitFiles: true,
   });
 
   selectedDtoFile = signal(0);
