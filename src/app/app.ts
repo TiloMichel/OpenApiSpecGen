@@ -9,6 +9,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatDividerModule } from '@angular/material/divider';
+import * as jsYaml from 'js-yaml';
 import { CodeGeneratorService } from './services/code-generator.service';
 import { FileDownloadService } from './services/file-download.service';
 import type { GenerationOptions, GenerationResult } from './models/openapi.model';
@@ -235,12 +236,24 @@ export class App {
   private loadFile(file: File): void {
     const reader = new FileReader();
     reader.onload = () => {
-      this.specContent.set(reader.result as string);
+      this.specContent.set(this.formatSpec(reader.result as string, file.name));
       this.specFilename.set(file.name);
       this.result.set(null);
       this.snackBar.open(`Loaded: ${file.name}`, 'OK', { duration: 3000 });
     };
     reader.readAsText(file);
+  }
+
+  private formatSpec(content: string, filename: string): string {
+    try {
+      const name = filename.toLowerCase();
+      if (name.endsWith('.json')) {
+        return JSON.stringify(JSON.parse(content), null, 2);
+      }
+      return jsYaml.dump(jsYaml.load(content) as object, { indent: 2, lineWidth: -1 });
+    } catch {
+      return content;
+    }
   }
 
   generate(): void {
@@ -291,7 +304,7 @@ export class App {
   }
 
   loadExample(): void {
-    this.specContent.set(EXAMPLE_SPEC);
+    this.specContent.set(this.formatSpec(EXAMPLE_SPEC, 'example.yaml'));
     this.specFilename.set('example.yaml');
     this.result.set(null);
     this.snackBar.open('Example spec loaded', 'OK', { duration: 2000 });
