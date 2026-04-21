@@ -12,6 +12,7 @@ import { MatDividerModule } from '@angular/material/divider';
 import { CodeGeneratorService } from './services/code-generator.service';
 import { FileDownloadService } from './services/file-download.service';
 import type { GenerationOptions, GenerationResult } from './models/openapi.model';
+import { SpecEditorComponent } from './components/spec-editor/spec-editor';
 
 const EXAMPLE_SPEC = `openapi: "3.0.0"
 info:
@@ -144,6 +145,7 @@ paths:
     MatCheckboxModule,
     MatSlideToggleModule,
     MatDividerModule,
+    SpecEditorComponent,
   ],
   templateUrl: './app.html',
   styleUrl: './app.scss',
@@ -205,6 +207,11 @@ export class App {
     const file = input.files?.[0];
     if (file) this.loadFile(file);
     input.value = '';
+  }
+
+  onSpecContentChange(content: string): void {
+    this.specContent.set(content);
+    this.result.set(null);
   }
 
   onDragOver(event: DragEvent): void {

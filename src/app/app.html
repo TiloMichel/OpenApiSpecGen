@@ -36,7 +36,13 @@
               <mat-icon>description</mat-icon>
               <span>{{ specFilename() }}</span>
             </div>
-            <pre class="spec-content">{{ specContent() }}</pre>
+            <app-spec-editor
+              [content]="specContent()"
+              [darkMode]="darkMode()"
+              [filename]="specFilename()"
+              (contentChange)="onSpecContentChange($event)"
+              (click)="$event.stopPropagation()"
+            />
           </div>
         } @else {
           <div class="drop-hint">

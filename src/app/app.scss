@@ -93,18 +93,8 @@
     margin-bottom: 12px;
   }
 
-  .spec-content {
-    max-height: 280px;
-    overflow: auto;
-    background: var(--mat-sys-surface-variant);
-    color: var(--mat-sys-on-surface-variant);
-    padding: 12px 14px;
-    border-radius: 6px;
-    font-size: 0.78rem;
-    line-height: 1.55;
-    margin: 0;
-    white-space: pre;
-    font-family: 'Cascadia Code', Consolas, 'Courier New', monospace;
+  app-spec-editor {
+    display: block;
   }
 }
 
