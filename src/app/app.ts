@@ -13,6 +13,7 @@ import { CodeGeneratorService } from './services/code-generator.service';
 import { FileDownloadService } from './services/file-download.service';
 import type { GenerationOptions, GenerationResult } from './models/openapi.model';
 import { SpecEditorComponent } from './components/spec-editor/spec-editor';
+import { CodeEditorComponent } from './components/code-editor/code-editor';
 
 const EXAMPLE_SPEC = `openapi: "3.0.0"
 info:
@@ -146,6 +147,7 @@ paths:
     MatSlideToggleModule,
     MatDividerModule,
     SpecEditorComponent,
+    CodeEditorComponent,
   ],
   templateUrl: './app.html',
   styleUrl: './app.scss',
@@ -267,6 +269,19 @@ export class App {
     const result = this.result();
     if (!result) return;
     await this.downloader.downloadZip(result, this.specContent(), this.specFilename());
+  }
+
+  updateResultFile(
+    key: 'csharpDtoFiles' | 'csharpControllerFiles' | 'typescriptSchemaFiles' | 'typescriptServiceFiles',
+    index: number,
+    content: string,
+  ): void {
+    this.result.update(r => {
+      if (!r) return r;
+      const files = [...r[key]];
+      files[index] = { ...files[index], content };
+      return { ...r, [key]: files };
+    });
   }
 
   copyToClipboard(content: string): void {
