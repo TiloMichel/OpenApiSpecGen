@@ -40,9 +40,8 @@
   }
 
   .spec-editor-host {
-    flex: 1;
+    height: 400px;
     overflow: hidden;
-    height: 280px;
 
     .cm-editor {
       height: 100%;
