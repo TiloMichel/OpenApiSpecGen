@@ -195,7 +195,12 @@
                     <mat-icon>download</mat-icon>
                   </button>
                 </div>
-                <pre class="code-block"><code>{{ dtoFile.content }}</code></pre>
+                <app-code-editor
+                  [content]="dtoFile.content"
+                  language="csharp"
+                  [darkMode]="darkMode()"
+                  (contentChange)="updateResultFile('csharpDtoFiles', selectedDtoFile(), $event)"
+                />
               </div>
             </mat-tab>
           }
@@ -231,7 +236,12 @@
                     <mat-icon>download</mat-icon>
                   </button>
                 </div>
-                <pre class="code-block"><code>{{ ctrlFile.content }}</code></pre>
+                <app-code-editor
+                  [content]="ctrlFile.content"
+                  language="csharp"
+                  [darkMode]="darkMode()"
+                  (contentChange)="updateResultFile('csharpControllerFiles', selectedControllerFile(), $event)"
+                />
               </div>
             </mat-tab>
           }
@@ -267,7 +277,12 @@
                     <mat-icon>download</mat-icon>
                   </button>
                 </div>
-                <pre class="code-block"><code>{{ schemaFile.content }}</code></pre>
+                <app-code-editor
+                  [content]="schemaFile.content"
+                  language="typescript"
+                  [darkMode]="darkMode()"
+                  (contentChange)="updateResultFile('typescriptSchemaFiles', selectedSchemaFile(), $event)"
+                />
               </div>
             </mat-tab>
           }
@@ -303,7 +318,12 @@
                     <mat-icon>download</mat-icon>
                   </button>
                 </div>
-                <pre class="code-block"><code>{{ svcFile.content }}</code></pre>
+                <app-code-editor
+                  [content]="svcFile.content"
+                  language="typescript"
+                  [darkMode]="darkMode()"
+                  (contentChange)="updateResultFile('typescriptServiceFiles', selectedServiceFile(), $event)"
+                />
               </div>
             </mat-tab>
           }

@@ -1,0 +1,10 @@
+// ViewEncapsulation.None — scoped under .code-editor-host
+
+.code-editor-host {
+  border-radius: 6px;
+  overflow: hidden;
+
+  .cm-editor {
+    border-radius: 6px;
+  }
+}
