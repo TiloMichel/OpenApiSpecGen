@@ -1,0 +1,51 @@
+// ViewEncapsulation.None — all selectors are global, scoped under .spec-editor-wrapper
+
+.spec-editor-wrapper {
+  border-radius: 6px;
+  overflow: hidden;
+  border: 1px solid var(--mat-sys-outline-variant);
+  display: flex;
+  flex-direction: column;
+
+  .spec-editor-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 2px 6px 2px 14px;
+    background: var(--mat-sys-surface-container);
+    border-bottom: 1px solid var(--mat-sys-outline-variant);
+    flex-shrink: 0;
+
+    .lang-badge {
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--mat-sys-on-surface-variant);
+      opacity: 0.6;
+      font-family: 'Cascadia Code', Consolas, monospace;
+    }
+
+    button {
+      width: 32px;
+      height: 32px;
+
+      mat-icon {
+        font-size: 18px;
+        width: 18px;
+        height: 18px;
+        line-height: 18px;
+      }
+    }
+  }
+
+  .spec-editor-host {
+    flex: 1;
+    overflow: hidden;
+    height: 280px;
+
+    .cm-editor {
+      height: 100%;
+    }
+  }
+}
