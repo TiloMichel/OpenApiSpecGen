@@ -21,6 +21,17 @@ docker run -p 8080:80 openapi-gen
 
 App available at <http://localhost:8080>
 
+**Test**
+Test with docker
+
+```bash
+docker build --target test -t openapi-gen-test .
+```
+
+```bash
+docker run --rm openapi-gen-test
+```
+
 ## Development server
 
 To start a local development server, run:
