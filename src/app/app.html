@@ -3,6 +3,12 @@
   <span class="toolbar-title">OpenAPI Code Generator</span>
   <span class="spacer"></span>
   <span class="toolbar-badge">C# &bull; TypeScript &bull; Zod</span>
+  <button mat-icon-button
+          [matTooltip]="darkMode() ? 'Switch to light mode' : 'Switch to dark mode'"
+          (click)="toggleDarkMode()"
+          class="dark-mode-btn">
+    <mat-icon>{{ darkMode() ? 'light_mode' : 'dark_mode' }}</mat-icon>
+  </button>
 </mat-toolbar>
 
 <div class="container">

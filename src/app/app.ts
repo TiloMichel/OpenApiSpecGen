@@ -1,4 +1,4 @@
-import { Component, signal, computed, inject } from '@angular/core';
+import { Component, signal, computed, inject, effect } from '@angular/core';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -152,6 +152,25 @@ export class App {
   private generator = inject(CodeGeneratorService);
   private downloader = inject(FileDownloadService);
   private snackBar = inject(MatSnackBar);
+
+  darkMode = signal<boolean>(
+    localStorage.getItem('darkMode') !== null
+      ? localStorage.getItem('darkMode') === 'dark'
+      : window.matchMedia('(prefers-color-scheme: dark)').matches
+  );
+
+  constructor() {
+    effect(() => {
+      const dark = this.darkMode();
+      document.body.classList.toggle('dark', dark);
+      document.body.classList.toggle('light', !dark);
+      localStorage.setItem('darkMode', dark ? 'dark' : 'light');
+    });
+  }
+
+  toggleDarkMode(): void {
+    this.darkMode.update(v => !v);
+  }
 
   specContent = signal<string>('');
   specFilename = signal<string>('spec.yaml');
