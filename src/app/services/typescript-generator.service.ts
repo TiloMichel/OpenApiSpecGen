@@ -179,10 +179,9 @@ export class TypescriptGeneratorService {
 
   // ── Type mapping ────────────────────────────────────────────────────────────
 
-  toZodType(type: ParsedType, isRequired: boolean, isNullable = false): string {
+  toZodType(type: ParsedType, _isRequired: boolean, isNullable = false): string {
     let result = this.zodBase(type);
     if (isNullable) result = `${result}.nullable()`;
-    if (!isRequired) result = `${result}.optional()`;
     return result;
   }
 
