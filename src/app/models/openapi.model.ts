@@ -98,6 +98,23 @@ export interface ParsedParam {
   isRequired: boolean;
 }
 
+// ── YouTrack integration ─────────────────────────────────────────────────────
+
+export interface YouTrackConfig {
+  url: string;
+  token: string;
+  projectId: string;
+}
+
+export interface YouTrackIssueResult {
+  operationId: string;
+  title: string;
+  success: boolean;
+  issueId?: string;
+  issueUrl?: string;
+  error?: string;
+}
+
 // ── Generation options & result ──────────────────────────────────────────────
 
 export interface GenerationOptions {
