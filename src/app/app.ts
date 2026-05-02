@@ -209,6 +209,7 @@ export class App {
     url: localStorage.getItem('youtrackUrl') ?? '',
     token: '',
     projectId: localStorage.getItem('youtrackProjectId') ?? '',
+    useProxy: localStorage.getItem('youtrackUseProxy') === 'true',
   });
   youTrackResults = signal<YouTrackIssueResult[] | null>(null);
   youTrackLoading = signal(false);
@@ -337,6 +338,7 @@ export class App {
     this.youTrackConfig.update(c => {
       if (key === 'url') localStorage.setItem('youtrackUrl', value as string);
       if (key === 'projectId') localStorage.setItem('youtrackProjectId', value as string);
+      if (key === 'useProxy') localStorage.setItem('youtrackUseProxy', String(value));
       return { ...c, [key]: value };
     });
   }

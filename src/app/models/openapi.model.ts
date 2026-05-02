@@ -104,6 +104,7 @@ export interface YouTrackConfig {
   url: string;
   token: string;
   projectId: string;
+  useProxy: boolean;
 }
 
 export interface YouTrackIssueResult {

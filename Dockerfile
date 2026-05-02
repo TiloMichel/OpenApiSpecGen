@@ -17,6 +17,10 @@ CMD ["npx", "ng", "test", "--watch=false"]
 # Stage 3 — serve
 FROM nginx:alpine
 COPY --from=builder /app/dist/openapi-spec-generator/browser /usr/share/nginx/html
-COPY nginx.conf /etc/nginx/nginx.conf
+COPY nginx.conf /etc/nginx/nginx.conf.template
 EXPOSE 80
-CMD ["nginx", "-g", "daemon off;"]
+# YOUTRACK_URL is substituted into nginx.conf at container start.
+# Example: docker run -e YOUTRACK_URL=http://127.0.0.1:8080 ...
+# Defaults to a no-op URL so nginx starts even without the variable set.
+ENV YOUTRACK_URL="http://127.0.0.1:8080"
+CMD ["/bin/sh", "-c", "envsubst '${YOUTRACK_URL}' < /etc/nginx/nginx.conf.template > /etc/nginx/nginx.conf && nginx -g 'daemon off;'"]
