@@ -54,12 +54,16 @@ export class YouTrackService {
     return results;
   }
 
+  private getApiBase(config: YouTrackConfig): string {
+    return config.useProxy ? '/youtrack-proxy' : config.url.replace(/\/$/, '');
+  }
+
   private async createIssue(
     config: YouTrackConfig,
     summary: string,
     description: string,
   ): Promise<YouTrackIssueResponse> {
-    const baseUrl = config.url.replace(/\/$/, '');
+    const baseUrl = this.getApiBase(config);
     const headers = new HttpHeaders({
       'Authorization': `Bearer ${config.token}`,
       'Content-Type': 'application/json',

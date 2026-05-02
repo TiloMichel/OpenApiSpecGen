@@ -233,6 +233,33 @@
     &--url { flex: 2; min-width: 280px; }
   }
 
+  .youtrack-proxy-toggle {
+    padding: 4px 0 8px;
+
+    mat-slide-toggle { display: block; }
+
+    code {
+      font-size: 0.85em;
+      background: var(--mat-sys-surface-variant);
+      padding: 1px 4px;
+      border-radius: 3px;
+    }
+  }
+
+  .youtrack-proxy-hint {
+    margin: 6px 0 0 0;
+    font-size: 0.8rem;
+    opacity: 0.7;
+    line-height: 1.5;
+
+    code {
+      font-size: 0.85em;
+      background: var(--mat-sys-surface-variant);
+      padding: 1px 4px;
+      border-radius: 3px;
+    }
+  }
+
   mat-card-actions {
     padding: 8px 16px 12px;
   }

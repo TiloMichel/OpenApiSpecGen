@@ -427,6 +427,19 @@
             <mat-hint>Project short name, e.g. MYPROJ</mat-hint>
           </mat-form-field>
         </div>
+
+        <div class="youtrack-proxy-toggle">
+          <mat-slide-toggle
+            [checked]="youTrackConfig().useProxy"
+            (change)="setYouTrackConfig('useProxy', $event.checked)">
+            Route via proxy (<code>/youtrack-proxy</code>)
+          </mat-slide-toggle>
+          <p class="youtrack-proxy-hint">
+            Avoids browser CORS restrictions. Dev: set <code>YOUTRACK_URL</code> before
+            <code>ng serve</code> (see <code>proxy.conf.js</code>). Docker: pass
+            <code>-e YOUTRACK_URL=http://…</code> to <code>docker run</code>.
+          </p>
+        </div>
       </mat-card-content>
 
       <mat-card-actions>
