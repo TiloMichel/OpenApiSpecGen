@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { OpenApiParserService } from './openapi-parser.service';
 import { CsharpGeneratorService } from './csharp-generator.service';
 import { TypescriptGeneratorService } from './typescript-generator.service';
+import { UseCaseGeneratorService } from './use-case-generator.service';
 import type { GenerationOptions, GenerationResult } from '../models/openapi.model';
 
 @Injectable({ providedIn: 'root' })
@@ -10,6 +11,7 @@ export class CodeGeneratorService {
     private parser: OpenApiParserService,
     private csharp: CsharpGeneratorService,
     private typescript: TypescriptGeneratorService,
+    private useCase: UseCaseGeneratorService,
   ) {}
 
   generate(specContent: string, options: GenerationOptions): GenerationResult {
@@ -38,6 +40,9 @@ export class CodeGeneratorService {
         ? (splitFiles
             ? this.typescript.generateServiceFiles(spec)
             : [{ filename: 'services.ts', path: 'typescript/services.ts', content: this.typescript.generateServices(spec) }])
+        : [],
+      useCaseFiles: options.includeUseCaseDocs
+        ? this.useCase.generateUseCaseFiles(spec)
         : [],
     };
   }

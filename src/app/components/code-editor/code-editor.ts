@@ -9,7 +9,7 @@ import { StreamLanguage } from '@codemirror/language';
 import { csharp } from '@codemirror/legacy-modes/mode/clike';
 import { oneDark } from '@codemirror/theme-one-dark';
 
-export type CodeLanguage = 'typescript' | 'csharp';
+export type CodeLanguage = 'typescript' | 'csharp' | 'markdown';
 
 const LIGHT_THEME = EditorView.theme({
   '&': { backgroundColor: '#fafafa', color: '#24292e' },
@@ -107,8 +107,8 @@ export class CodeEditorComponent implements AfterViewInit, OnDestroy {
   }
 
   private langExtension(lang: CodeLanguage) {
-    return lang === 'typescript'
-      ? javascript({ typescript: true })
-      : StreamLanguage.define(csharp);
+    if (lang === 'typescript') return javascript({ typescript: true });
+    if (lang === 'csharp') return StreamLanguage.define(csharp);
+    return [];
   }
 }

@@ -16,6 +16,7 @@ export class FileDownloadService {
       ...result.csharpControllerFiles,
       ...result.typescriptSchemaFiles,
       ...result.typescriptServiceFiles,
+      ...result.useCaseFiles,
     ];
     for (const file of allFiles) {
       zip.file(file.path, file.content);

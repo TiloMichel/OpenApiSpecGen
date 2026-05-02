@@ -188,16 +188,18 @@ export class App {
     includeTypescriptSchemas: true,
     includeTypescriptServices: true,
     splitFiles: true,
+    includeUseCaseDocs: false,
   });
 
   selectedDtoFile = signal(0);
   selectedControllerFile = signal(0);
   selectedSchemaFile = signal(0);
   selectedServiceFile = signal(0);
+  selectedUseCaseFile = signal(0);
 
   hasAnyOption = computed(() => {
     const o = this.options();
-    return o.includeCsharpDtos || o.includeCsharpControllers || o.includeTypescriptSchemas || o.includeTypescriptServices;
+    return o.includeCsharpDtos || o.includeCsharpControllers || o.includeTypescriptSchemas || o.includeTypescriptServices || o.includeUseCaseDocs;
   });
 
   setOption<K extends keyof GenerationOptions>(key: K, value: GenerationOptions[K]): void {
@@ -263,6 +265,7 @@ export class App {
       this.selectedControllerFile.set(0);
       this.selectedSchemaFile.set(0);
       this.selectedServiceFile.set(0);
+      this.selectedUseCaseFile.set(0);
       this.snackBar.open('Code generated successfully!', 'OK', { duration: 3000 });
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : String(e);
@@ -285,7 +288,7 @@ export class App {
   }
 
   updateResultFile(
-    key: 'csharpDtoFiles' | 'csharpControllerFiles' | 'typescriptSchemaFiles' | 'typescriptServiceFiles',
+    key: 'csharpDtoFiles' | 'csharpControllerFiles' | 'typescriptSchemaFiles' | 'typescriptServiceFiles' | 'useCaseFiles',
     index: number,
     content: string,
   ): void {

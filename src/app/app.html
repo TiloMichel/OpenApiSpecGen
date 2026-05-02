@@ -126,6 +126,15 @@
             Angular HTTP Services
           </span>
         </mat-checkbox>
+
+        <mat-checkbox
+          [checked]="options().includeUseCaseDocs"
+          (change)="setOption('includeUseCaseDocs', $event.checked)">
+          <span class="option-label">
+            <mat-icon class="option-icon">menu_book</mat-icon>
+            Use Case Documentation
+          </span>
+        </mat-checkbox>
       </div>
 
       <mat-divider></mat-divider>
@@ -323,6 +332,47 @@
                   language="typescript"
                   [darkMode]="darkMode()"
                   (contentChange)="updateResultFile('typescriptServiceFiles', selectedServiceFile(), $event)"
+                />
+              </div>
+            </mat-tab>
+          }
+
+          @if (result()!.useCaseFiles.length > 0) {
+            <mat-tab>
+              <ng-template mat-tab-label>
+                <mat-icon class="tab-icon">menu_book</mat-icon>
+                Use Case Docs
+                @if (result()!.useCaseFiles.length > 1) {
+                  <span class="tab-count">({{ result()!.useCaseFiles.length }})</span>
+                }
+              </ng-template>
+              <div class="code-panel">
+                @if (result()!.useCaseFiles.length > 1) {
+                  <div class="file-picker">
+                    @for (f of result()!.useCaseFiles; track f.filename; let i = $index) {
+                      <button mat-stroked-button [class.file-active]="selectedUseCaseFile() === i"
+                              (click)="selectedUseCaseFile.set(i)">
+                        <mat-icon>description</mat-icon>{{ f.filename }}
+                      </button>
+                    }
+                  </div>
+                }
+                @let ucFile = result()!.useCaseFiles[selectedUseCaseFile()];
+                <div class="code-actions">
+                  <button mat-icon-button matTooltip="Copy to clipboard"
+                          (click)="copyToClipboard(ucFile.content)">
+                    <mat-icon>content_copy</mat-icon>
+                  </button>
+                  <button mat-icon-button [matTooltip]="'Download ' + ucFile.filename"
+                          (click)="downloadFile(ucFile.content, ucFile.filename)">
+                    <mat-icon>download</mat-icon>
+                  </button>
+                </div>
+                <app-code-editor
+                  [content]="ucFile.content"
+                  language="markdown"
+                  [darkMode]="darkMode()"
+                  (contentChange)="updateResultFile('useCaseFiles', selectedUseCaseFile(), $event)"
                 />
               </div>
             </mat-tab>

@@ -106,6 +106,7 @@ export interface GenerationOptions {
   includeTypescriptSchemas: boolean;
   includeTypescriptServices: boolean;
   splitFiles: boolean;
+  includeUseCaseDocs: boolean;
 }
 
 export interface GeneratedFile {
@@ -120,4 +121,5 @@ export interface GenerationResult {
   csharpControllerFiles: GeneratedFile[];
   typescriptSchemaFiles: GeneratedFile[];
   typescriptServiceFiles: GeneratedFile[];
+  useCaseFiles: GeneratedFile[];
 }
