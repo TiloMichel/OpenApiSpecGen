@@ -383,4 +383,85 @@
     </mat-card>
   }
 
+  <!-- ── YouTrack Integration Card ─────────────────────────────── -->
+  @if (useCaseCount() > 0) {
+    <mat-card class="youtrack-card">
+      <mat-card-header>
+        <mat-card-title>
+          <mat-icon class="youtrack-title-icon">bug_report</mat-icon>
+          YouTrack Integration
+        </mat-card-title>
+        <mat-card-subtitle>
+          Create one issue per use case in your YouTrack project &bull;
+          <strong>{{ useCaseCount() }}</strong> issue{{ useCaseCount() === 1 ? '' : 's' }} will be created
+        </mat-card-subtitle>
+      </mat-card-header>
+
+      <mat-card-content>
+        <div class="youtrack-form">
+          <mat-form-field appearance="outline" class="youtrack-field youtrack-field--url">
+            <mat-label>YouTrack URL</mat-label>
+            <input matInput type="url"
+                   placeholder="https://myteam.youtrack.cloud"
+                   [value]="youTrackConfig().url"
+                   (input)="setYouTrackConfig('url', $any($event.target).value)" />
+            <mat-icon matSuffix>link</mat-icon>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="youtrack-field">
+            <mat-label>Permanent Token</mat-label>
+            <input matInput type="password"
+                   placeholder="perm:..."
+                   [value]="youTrackConfig().token"
+                   (input)="setYouTrackConfig('token', $any($event.target).value)" />
+            <mat-icon matSuffix>vpn_key</mat-icon>
+            <mat-hint>Not stored between sessions</mat-hint>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="youtrack-field">
+            <mat-label>Project ID</mat-label>
+            <input matInput type="text"
+                   placeholder="MYPROJ"
+                   [value]="youTrackConfig().projectId"
+                   (input)="setYouTrackConfig('projectId', $any($event.target).value)" />
+            <mat-hint>Project short name, e.g. MYPROJ</mat-hint>
+          </mat-form-field>
+        </div>
+      </mat-card-content>
+
+      <mat-card-actions>
+        <button mat-raised-button color="primary"
+                [disabled]="youTrackLoading() || !youTrackConfig().url || !youTrackConfig().token || !youTrackConfig().projectId"
+                (click)="createYouTrackIssues()">
+          @if (youTrackLoading()) {
+            <mat-spinner diameter="18" class="btn-spinner"></mat-spinner>
+          } @else {
+            <mat-icon>upload</mat-icon>
+          }
+          {{ youTrackLoading() ? 'Creating issues…' : 'Create Issues in YouTrack' }}
+        </button>
+      </mat-card-actions>
+
+      @if (youTrackResults()) {
+        <mat-card-content>
+          <mat-divider></mat-divider>
+          <div class="youtrack-results">
+            @for (r of youTrackResults()!; track r.operationId) {
+              <div class="youtrack-result" [class.youtrack-result--ok]="r.success" [class.youtrack-result--err]="!r.success">
+                <mat-icon>{{ r.success ? 'check_circle' : 'error' }}</mat-icon>
+                @if (r.success) {
+                  <a [href]="r.issueUrl" target="_blank" rel="noopener">
+                    {{ r.issueId }}: {{ r.title }}
+                  </a>
+                } @else {
+                  <span><strong>{{ r.title }}</strong> — {{ r.error }}</span>
+                }
+              </div>
+            }
+          </div>
+        </mat-card-content>
+      }
+    </mat-card>
+  }
+
 </div>

@@ -9,10 +9,14 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatDividerModule } from '@angular/material/divider';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import * as jsYaml from 'js-yaml';
 import { CodeGeneratorService } from './services/code-generator.service';
 import { FileDownloadService } from './services/file-download.service';
-import type { GenerationOptions, GenerationResult } from './models/openapi.model';
+import { YouTrackService } from './services/youtrack.service';
+import type { GenerationOptions, GenerationResult, YouTrackConfig, YouTrackIssueResult } from './models/openapi.model';
 import { SpecEditorComponent } from './components/spec-editor/spec-editor';
 import { CodeEditorComponent } from './components/code-editor/code-editor';
 
@@ -147,6 +151,9 @@ paths:
     MatCheckboxModule,
     MatSlideToggleModule,
     MatDividerModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatProgressSpinnerModule,
     SpecEditorComponent,
     CodeEditorComponent,
   ],
@@ -156,6 +163,7 @@ paths:
 export class App {
   private generator = inject(CodeGeneratorService);
   private downloader = inject(FileDownloadService);
+  private youTrack = inject(YouTrackService);
   private snackBar = inject(MatSnackBar);
 
   darkMode = signal<boolean>(
@@ -196,6 +204,18 @@ export class App {
   selectedSchemaFile = signal(0);
   selectedServiceFile = signal(0);
   selectedUseCaseFile = signal(0);
+
+  youTrackConfig = signal<YouTrackConfig>({
+    url: localStorage.getItem('youtrackUrl') ?? '',
+    token: '',
+    projectId: localStorage.getItem('youtrackProjectId') ?? '',
+  });
+  youTrackResults = signal<YouTrackIssueResult[] | null>(null);
+  youTrackLoading = signal(false);
+
+  useCaseCount = computed(() =>
+    (this.result()?.useCaseFiles ?? []).filter(f => !f.filename.includes('/')).length
+  );
 
   hasAnyOption = computed(() => {
     const o = this.options();
@@ -311,5 +331,30 @@ export class App {
     this.specFilename.set('example.yaml');
     this.result.set(null);
     this.snackBar.open('Example spec loaded', 'OK', { duration: 2000 });
+  }
+
+  setYouTrackConfig<K extends keyof YouTrackConfig>(key: K, value: YouTrackConfig[K]): void {
+    this.youTrackConfig.update(c => {
+      if (key === 'url') localStorage.setItem('youtrackUrl', value as string);
+      if (key === 'projectId') localStorage.setItem('youtrackProjectId', value as string);
+      return { ...c, [key]: value };
+    });
+  }
+
+  async createYouTrackIssues(): Promise<void> {
+    const files = this.result()?.useCaseFiles;
+    if (!files?.length) return;
+    this.youTrackLoading.set(true);
+    this.youTrackResults.set(null);
+    try {
+      const results = await this.youTrack.createUseCaseIssues(this.youTrackConfig(), files);
+      this.youTrackResults.set(results);
+      const ok = results.filter(r => r.success).length;
+      this.snackBar.open(`Created ${ok} of ${results.length} issues`, 'OK', { duration: 4000 });
+    } catch (e: unknown) {
+      this.snackBar.open(`YouTrack error: ${e instanceof Error ? e.message : String(e)}`, 'OK', { duration: 6000 });
+    } finally {
+      this.youTrackLoading.set(false);
+    }
   }
 }

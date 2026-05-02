@@ -211,6 +211,74 @@
   button { color: #ccc; }
 }
 
+// ── YouTrack card ──────────────────────────────────────────────────────────────
+.youtrack-card {
+  .youtrack-title-icon {
+    vertical-align: middle;
+    margin-right: 6px;
+    opacity: 0.8;
+  }
+
+  .youtrack-form {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    padding: 8px 0 4px;
+  }
+
+  .youtrack-field {
+    flex: 1;
+    min-width: 200px;
+
+    &--url { flex: 2; min-width: 280px; }
+  }
+
+  mat-card-actions {
+    padding: 8px 16px 12px;
+  }
+
+  .btn-spinner {
+    display: inline-block;
+    vertical-align: middle;
+    margin-right: 6px;
+  }
+
+  mat-divider { margin: 8px 0 12px; }
+
+  .youtrack-results {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 4px 0 8px;
+  }
+
+  .youtrack-result {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    font-size: 0.9rem;
+    line-height: 1.4;
+
+    mat-icon {
+      font-size: 20px;
+      width: 20px;
+      height: 20px;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    &--ok mat-icon { color: var(--mat-sys-primary); }
+    &--err mat-icon { color: var(--mat-sys-error); }
+    &--err span    { color: var(--mat-sys-error); }
+
+    a {
+      color: var(--mat-sys-primary);
+      text-decoration: none;
+      &:hover { text-decoration: underline; }
+    }
+  }
+}
+
 .code-block {
   background: #1e1e1e;
   color: #d4d4d4;
