@@ -233,6 +233,64 @@
     &--url { flex: 2; min-width: 280px; }
   }
 
+  .youtrack-project-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    flex-wrap: wrap;
+    padding: 4px 0;
+
+    .youtrack-field--project { flex: 1; min-width: 220px; }
+
+    .load-projects-btn { margin-top: 4px; white-space: nowrap; }
+  }
+
+  .staged-issues-section {
+    margin-top: 8px;
+
+    mat-divider { margin-bottom: 10px; }
+
+    .staged-issues-toolbar {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      margin-bottom: 8px;
+
+      .staged-count { flex: 1; font-size: 0.85rem; opacity: 0.7; }
+    }
+
+    .staged-table-wrapper { overflow-x: auto; }
+
+    .staged-issues-table {
+      width: 100%;
+      min-width: 620px;
+
+      .operation-cell { font-family: monospace; font-size: 0.82rem; white-space: nowrap; }
+      .summary-cell   { font-size: 0.85rem; }
+
+      .file-type-badge {
+        display: inline-block;
+        padding: 2px 8px;
+        border-radius: 12px;
+        font-size: 0.72rem;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+        white-space: nowrap;
+
+        &.file-type-overview   { background: var(--mat-sys-primary-container);   color: var(--mat-sys-on-primary-container); }
+        &.file-type-csharp     { background: var(--mat-sys-secondary-container); color: var(--mat-sys-on-secondary-container); }
+        &.file-type-typescript { background: var(--mat-sys-tertiary-container);  color: var(--mat-sys-on-tertiary-container); }
+      }
+
+      .issue-type-cell { padding-top: 6px; padding-bottom: 6px; }
+
+      .issue-type-field { width: 150px; }
+
+      .row-deselected { opacity: 0.4; }
+    }
+  }
+
   .youtrack-proxy-toggle {
     padding: 4px 0 8px;
 

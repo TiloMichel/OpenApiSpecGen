@@ -11,12 +11,18 @@ import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
+import { MatSelectModule } from '@angular/material/select';
+import { MatTableModule } from '@angular/material/table';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import * as jsYaml from 'js-yaml';
 import { CodeGeneratorService } from './services/code-generator.service';
 import { FileDownloadService } from './services/file-download.service';
 import { YouTrackService } from './services/youtrack.service';
-import type { GenerationOptions, GenerationResult, YouTrackConfig, YouTrackIssueResult } from './models/openapi.model';
+import type {
+  GenerationOptions, GenerationResult,
+  YouTrackConfig, YouTrackIssueResult,
+  YouTrackProject, YouTrackIssueType, YouTrackStagedIssue,
+} from './models/openapi.model';
 import { SpecEditorComponent } from './components/spec-editor/spec-editor';
 import { CodeEditorComponent } from './components/code-editor/code-editor';
 
@@ -153,6 +159,8 @@ paths:
     MatDividerModule,
     MatFormFieldModule,
     MatInputModule,
+    MatSelectModule,
+    MatTableModule,
     MatProgressSpinnerModule,
     SpecEditorComponent,
     CodeEditorComponent,
@@ -209,14 +217,30 @@ export class App {
     url: localStorage.getItem('youtrackUrl') ?? '',
     token: '',
     projectId: localStorage.getItem('youtrackProjectId') ?? '',
-    useProxy: localStorage.getItem('youtrackUseProxy') === 'true',
+    useProxy: localStorage.getItem('youtrackUseProxy') !== 'false',
   });
+  youTrackProjects = signal<YouTrackProject[]>([]);
+  youTrackIssueTypes = signal<YouTrackIssueType[]>([]);
+  youTrackProjectsLoading = signal(false);
+  youTrackIssueTypesLoading = signal(false);
   youTrackResults = signal<YouTrackIssueResult[] | null>(null);
   youTrackLoading = signal(false);
+  stagedIssues = signal<YouTrackStagedIssue[]>([]);
+
+  readonly stagedIssueColumns = ['select', 'operation', 'file', 'summary', 'issueType'];
+  readonly trackByStagedIssue = (_: number, item: YouTrackStagedIssue) => item.id;
 
   useCaseCount = computed(() =>
     (this.result()?.useCaseFiles ?? []).filter(f => !f.filename.includes('/')).length
   );
+  allIssuesSelected = computed(() => {
+    const issues = this.stagedIssues();
+    return issues.length > 0 && issues.every(i => i.selected);
+  });
+  someIssuesSelected = computed(() =>
+    this.stagedIssues().some(i => i.selected) && !this.allIssuesSelected()
+  );
+  selectedIssueCount = computed(() => this.stagedIssues().filter(i => i.selected).length);
 
   hasAnyOption = computed(() => {
     const o = this.options();
@@ -281,12 +305,23 @@ export class App {
 
   generate(): void {
     try {
-      this.result.set(this.generator.generate(this.specContent(), this.options()));
+      const result = this.generator.generate(this.specContent(), this.options());
+      this.result.set(result);
       this.selectedDtoFile.set(0);
       this.selectedControllerFile.set(0);
       this.selectedSchemaFile.set(0);
       this.selectedServiceFile.set(0);
       this.selectedUseCaseFile.set(0);
+      if (result.useCaseFiles.length > 0) {
+        const staged = this.youTrack.buildStagedIssues(result.useCaseFiles);
+        const types = this.youTrackIssueTypes();
+        if (types.length > 0) {
+          staged.forEach(s => { s.issueTypeId = types[0].id; });
+        }
+        this.stagedIssues.set(staged);
+      } else {
+        this.stagedIssues.set([]);
+      }
       this.snackBar.open('Code generated successfully!', 'OK', { duration: 3000 });
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : String(e);
@@ -343,13 +378,72 @@ export class App {
     });
   }
 
+  async loadYouTrackProjects(): Promise<void> {
+    this.youTrackProjectsLoading.set(true);
+    try {
+      const projects = await this.youTrack.getProjects(this.youTrackConfig());
+      this.youTrackProjects.set(projects);
+      const projectId = this.youTrackConfig().projectId || projects[0]?.id;
+      if (projectId) {
+        await this.loadYouTrackIssueTypes(projectId);
+      }
+    } catch (e: unknown) {
+      this.snackBar.open(
+        `Failed to load projects: ${e instanceof Error ? e.message : String(e)}`,
+        'OK', { duration: 6000 },
+      );
+    } finally {
+      this.youTrackProjectsLoading.set(false);
+    }
+  }
+
+  async onYouTrackProjectChange(projectId: string): Promise<void> {
+    this.setYouTrackConfig('projectId', projectId);
+    await this.loadYouTrackIssueTypes(projectId);
+  }
+
+  private async loadYouTrackIssueTypes(projectId: string): Promise<void> {
+    this.youTrackIssueTypes.set([]);
+    this.youTrackIssueTypesLoading.set(true);
+    try {
+      const types = await this.youTrack.getIssueTypes(this.youTrackConfig(), projectId);
+      console.log('youtrack types')
+      console.log(types);
+      this.youTrackIssueTypes.set(types);
+      if (types.length > 0) {
+        this.stagedIssues.update(issues =>
+          issues.map(i => ({ ...i, issueTypeId: i.issueTypeId || types[0].id }))
+        );
+      }
+    } catch (e: unknown) {
+      this.snackBar.open(
+        `Failed to load "Typ" field: ${e instanceof Error ? e.message : String(e)}`,
+        'OK', { duration: 6000 },
+      );
+    } finally {
+      this.youTrackIssueTypesLoading.set(false);
+    }
+  }
+
+  setStagedIssueSelected(id: string, selected: boolean): void {
+    this.stagedIssues.update(issues => issues.map(i => i.id === id ? { ...i, selected } : i));
+  }
+
+  setStagedIssueType(id: string, issueTypeId: string): void {
+    this.stagedIssues.update(issues => issues.map(i => i.id === id ? { ...i, issueTypeId } : i));
+  }
+
+  selectAllIssues(selected: boolean): void {
+    this.stagedIssues.update(issues => issues.map(i => ({ ...i, selected })));
+  }
+
   async createYouTrackIssues(): Promise<void> {
-    const files = this.result()?.useCaseFiles;
-    if (!files?.length) return;
+    const staged = this.stagedIssues();
+    if (!staged.some(s => s.selected)) return;
     this.youTrackLoading.set(true);
     this.youTrackResults.set(null);
     try {
-      const results = await this.youTrack.createUseCaseIssues(this.youTrackConfig(), files);
+      const results = await this.youTrack.createUseCaseIssues(this.youTrackConfig(), staged);
       this.youTrackResults.set(results);
       const ok = results.filter(r => r.success).length;
       this.snackBar.open(`Created ${ok} of ${results.length} issues`, 'OK', { duration: 4000 });
