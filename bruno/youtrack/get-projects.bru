@@ -1,0 +1,16 @@
+meta {
+  name: Get Projects
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/admin/projects?fields=id,name,shortName
+  body: none
+  auth: none
+}
+
+headers {
+  Authorization: Bearer {{token}}
+  Accept: application/json
+}

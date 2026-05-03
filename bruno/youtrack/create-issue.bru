@@ -1,0 +1,37 @@
+meta {
+  name: Create Issue
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/api/issues?fields=id,idReadable,webUrl
+  body: json
+  auth: none
+}
+
+headers {
+  Authorization: Bearer {{token}}
+  Content-Type: application/json
+  Accept: application/json
+}
+
+body:json {
+  {
+    "summary": "[Test] Sample issue — safe to delete",
+    "description": "Created via Bruno. Please delete.",
+    "project": {
+      "id": "{{projectId}}"
+    },
+    "customFields": [
+      {
+        "$type": "SingleEnumIssueCustomField",
+        "name": "Typ",
+        "value": {
+          "$type": "EnumBundleElement",
+          "id": "your-issue-type-id-here"
+        }
+      }
+    ]
+  }
+}
