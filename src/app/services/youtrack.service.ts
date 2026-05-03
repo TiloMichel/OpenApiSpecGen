@@ -42,7 +42,7 @@ export class YouTrackService {
         { headers: this.buildHeaders(config.token) },
       ),
     );
-    return fields.find(f => f.field?.name === 'Typ')?.bundle?.values ?? [];
+    return fields.find(f => f.field?.name === 'Type')?.bundle?.values ?? [];
   }
 
   buildStagedIssues(useCaseFiles: GeneratedFile[]): YouTrackStagedIssue[] {
@@ -119,7 +119,7 @@ export class YouTrackService {
     if (issueTypeId) {
       body['customFields'] = [{
         '$type': 'SingleEnumIssueCustomField',
-        'name': 'Typ',
+        'name': 'Type',
         'value': { '$type': 'EnumBundleElement', 'id': issueTypeId },
       }];
     }
