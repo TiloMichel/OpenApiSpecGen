@@ -1,0 +1,16 @@
+meta {
+  name: Get Issue Types (Typ custom field)
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/admin/projects/{{projectId}}/customFields?fields=id,field(id,name),bundle(values(id,name))
+  body: none
+  auth: none
+}
+
+headers {
+  Authorization: Bearer {{token}}
+  Accept: application/json
+}
