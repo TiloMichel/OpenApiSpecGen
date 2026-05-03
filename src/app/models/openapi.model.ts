@@ -116,6 +116,27 @@ export interface YouTrackIssueResult {
   error?: string;
 }
 
+export interface YouTrackProject {
+  id: string;
+  name: string;
+  shortName: string;
+}
+
+export interface YouTrackIssueType {
+  id: string;
+  name: string;
+}
+
+export interface YouTrackStagedIssue {
+  id: string;
+  operationId: string;
+  fileType: 'overview' | 'csharp' | 'typescript';
+  summary: string;
+  description: string;
+  selected: boolean;
+  issueTypeId: string;
+}
+
 // ── Generation options & result ──────────────────────────────────────────────
 
 export interface GenerationOptions {

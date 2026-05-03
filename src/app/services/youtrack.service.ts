@@ -1,7 +1,14 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpErrorResponse } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
-import type { GeneratedFile, YouTrackConfig, YouTrackIssueResult } from '../models/openapi.model';
+import type {
+  GeneratedFile,
+  YouTrackConfig,
+  YouTrackIssueResult,
+  YouTrackProject,
+  YouTrackIssueType,
+  YouTrackStagedIssue,
+} from '../models/openapi.model';
 
 interface YouTrackIssueResponse {
   id: string;
@@ -9,107 +16,137 @@ interface YouTrackIssueResponse {
   webUrl: string;
 }
 
-interface UseCaseGroup {
-  overview?: GeneratedFile;
-  csharp?: GeneratedFile;
-  typescript?: GeneratedFile;
+interface CustomFieldResponse {
+  id: string;
+  field?: { id: string; name: string };
+  bundle?: { values: YouTrackIssueType[] };
 }
 
 @Injectable({ providedIn: 'root' })
 export class YouTrackService {
   constructor(private http: HttpClient) {}
 
+  async getProjects(config: YouTrackConfig): Promise<YouTrackProject[]> {
+    return firstValueFrom(
+      this.http.get<YouTrackProject[]>(
+        `${this.getApiBase(config)}/api/admin/projects?fields=id,name,shortName`,
+        { headers: this.buildHeaders(config.token) },
+      ),
+    );
+  }
+
+  async getIssueTypes(config: YouTrackConfig, projectId: string): Promise<YouTrackIssueType[]> {
+    const fields = await firstValueFrom(
+      this.http.get<CustomFieldResponse[]>(
+        `${this.getApiBase(config)}/api/admin/projects/${projectId}/customFields?fields=id,field(id,name),bundle(values(id,name))`,
+        { headers: this.buildHeaders(config.token) },
+      ),
+    );
+    return fields.find(f => f.field?.name === 'Type')?.bundle?.values ?? [];
+  }
+
+  buildStagedIssues(useCaseFiles: GeneratedFile[]): YouTrackStagedIssue[] {
+    return useCaseFiles.map(file => {
+      let opId: string;
+      let fileType: 'overview' | 'csharp' | 'typescript';
+      let typeLabel: string;
+
+      if (file.filename.startsWith('csharp/')) {
+        opId = file.filename.slice('csharp/'.length, -'.md'.length);
+        fileType = 'csharp';
+        typeLabel = ' — C#';
+      } else if (file.filename.startsWith('typescript/')) {
+        opId = file.filename.slice('typescript/'.length, -'.md'.length);
+        fileType = 'typescript';
+        typeLabel = ' — TypeScript';
+      } else {
+        opId = file.filename.slice(0, -'.md'.length);
+        fileType = 'overview';
+        typeLabel = '';
+      }
+
+      const title = this.extractTitle(file.content);
+      return {
+        id: `${opId}:${fileType}`,
+        operationId: opId,
+        fileType,
+        summary: `[Use Case] ${title}${typeLabel}`,
+        description: file.content,
+        selected: true,
+        issueTypeId: '',
+      };
+    });
+  }
+
   async createUseCaseIssues(
     config: YouTrackConfig,
-    useCaseFiles: GeneratedFile[],
+    staged: YouTrackStagedIssue[],
   ): Promise<YouTrackIssueResult[]> {
-    const groups = this.groupFiles(useCaseFiles);
     const results: YouTrackIssueResult[] = [];
-
-    for (const [opId, group] of groups) {
-      const title = this.extractTitle(group.overview?.content ?? opId);
+    for (const issue of staged.filter(s => s.selected)) {
       try {
-        const issue = await this.createIssue(
-          config,
-          `[Use Case] ${title}`,
-          this.buildDescription(group),
-        );
+        const created = await this.createIssue(config, issue.summary, issue.description, issue.issueTypeId);
         results.push({
-          operationId: opId,
-          title,
+          operationId: issue.id,
+          title: issue.summary,
           success: true,
-          issueId: issue.idReadable,
-          issueUrl: issue.webUrl,
+          issueId: created.idReadable,
+          issueUrl: created.webUrl,
         });
       } catch (e) {
         results.push({
-          operationId: opId,
-          title,
+          operationId: issue.id,
+          title: issue.summary,
           success: false,
           error: this.errorMessage(e),
         });
       }
     }
-
     return results;
-  }
-
-  private getApiBase(config: YouTrackConfig): string {
-    return config.useProxy ? '/youtrack-proxy' : config.url.replace(/\/$/, '');
   }
 
   private async createIssue(
     config: YouTrackConfig,
     summary: string,
     description: string,
+    issueTypeId: string,
   ): Promise<YouTrackIssueResponse> {
-    const baseUrl = this.getApiBase(config);
-    const headers = new HttpHeaders({
-      'Authorization': `Bearer ${config.token}`,
-      'Content-Type': 'application/json',
-      'Accept': 'application/json',
-    });
+    const body: Record<string, unknown> = {
+      summary,
+      description,
+      project: { id: config.projectId },
+    };
+    if (issueTypeId) {
+      body['customFields'] = [{
+        '$type': 'SingleEnumIssueCustomField',
+        'name': 'Type',
+        'value': { '$type': 'EnumBundleElement', 'id': issueTypeId },
+      }];
+    }
     return firstValueFrom(
       this.http.post<YouTrackIssueResponse>(
-        `${baseUrl}/api/issues?fields=id,idReadable,webUrl`,
-        { summary, description, project: { id: config.projectId } },
-        { headers },
+        `${this.getApiBase(config)}/api/issues?fields=id,idReadable,webUrl`,
+        body,
+        { headers: this.buildHeaders(config.token) },
       ),
     );
   }
 
-  private groupFiles(files: GeneratedFile[]): Map<string, UseCaseGroup> {
-    const groups = new Map<string, UseCaseGroup>();
-    for (const file of files) {
-      let opId: string;
-      let key: keyof UseCaseGroup;
-      if (file.filename.startsWith('csharp/')) {
-        opId = file.filename.slice('csharp/'.length, -'.md'.length);
-        key = 'csharp';
-      } else if (file.filename.startsWith('typescript/')) {
-        opId = file.filename.slice('typescript/'.length, -'.md'.length);
-        key = 'typescript';
-      } else {
-        opId = file.filename.slice(0, -'.md'.length);
-        key = 'overview';
-      }
-      const g = groups.get(opId) ?? {};
-      groups.set(opId, { ...g, [key]: file });
-    }
-    return groups;
+  private getApiBase(config: YouTrackConfig): string {
+    return config.useProxy ? '/youtrack-proxy' : config.url.replace(/\/$/, '');
+  }
+
+  private buildHeaders(token: string): HttpHeaders {
+    return new HttpHeaders({
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+    });
   }
 
   private extractTitle(content: string): string {
     const match = content.match(/^#\s+(.+)$/m);
     return match ? match[1].trim() : 'Use Case';
-  }
-
-  private buildDescription(group: UseCaseGroup): string {
-    const parts: string[] = [];
-    if (group.overview) parts.push(group.overview.content);
-    if (group.csharp) parts.push('---\n\n' + group.csharp.content);
-    if (group.typescript) parts.push('---\n\n' + group.typescript.content);
-    return parts.join('\n\n');
   }
 
   private errorMessage(e: unknown): string {

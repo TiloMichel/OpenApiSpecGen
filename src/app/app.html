@@ -392,8 +392,9 @@
           YouTrack Integration
         </mat-card-title>
         <mat-card-subtitle>
-          Create one issue per use case in your YouTrack project &bull;
-          <strong>{{ useCaseCount() }}</strong> issue{{ useCaseCount() === 1 ? '' : 's' }} will be created
+          Create one issue per use-case file &bull;
+          <strong>{{ stagedIssues().length }}</strong> issue{{ stagedIssues().length === 1 ? '' : 's' }} total,
+          <strong>{{ selectedIssueCount() }}</strong> selected
         </mat-card-subtitle>
       </mat-card-header>
 
@@ -417,15 +418,39 @@
             <mat-icon matSuffix>vpn_key</mat-icon>
             <mat-hint>Not stored between sessions</mat-hint>
           </mat-form-field>
+        </div>
 
-          <mat-form-field appearance="outline" class="youtrack-field">
-            <mat-label>Project ID</mat-label>
-            <input matInput type="text"
-                   placeholder="MYPROJ"
-                   [value]="youTrackConfig().projectId"
-                   (input)="setYouTrackConfig('projectId', $any($event.target).value)" />
-            <mat-hint>Project short name, e.g. MYPROJ</mat-hint>
+        <div class="youtrack-project-row">
+          <mat-form-field appearance="outline" class="youtrack-field youtrack-field--project">
+            <mat-label>Project</mat-label>
+            <mat-select
+              [value]="youTrackConfig().projectId"
+              (selectionChange)="onYouTrackProjectChange($event.value)"
+              [disabled]="youTrackProjects().length === 0">
+              @if (youTrackProjects().length === 0) {
+                <mat-option disabled value="">Click "Load Projects" first</mat-option>
+              }
+              @for (p of youTrackProjects(); track p.id) {
+                <mat-option [value]="p.id">{{ p.name }} ({{ p.shortName }})</mat-option>
+              }
+            </mat-select>
+            @if (youTrackIssueTypesLoading()) {
+              <mat-hint>Loading issue types…</mat-hint>
+            } @else if (youTrackIssueTypes().length > 0) {
+              <mat-hint>{{ youTrackIssueTypes().length }} issue types available</mat-hint>
+            }
           </mat-form-field>
+
+          <button mat-stroked-button class="load-projects-btn"
+                  [disabled]="!youTrackConfig().url || !youTrackConfig().token || youTrackProjectsLoading()"
+                  (click)="loadYouTrackProjects()">
+            @if (youTrackProjectsLoading()) {
+              <mat-spinner diameter="18" class="btn-spinner"></mat-spinner>
+            } @else {
+              <mat-icon>refresh</mat-icon>
+            }
+            {{ youTrackProjectsLoading() ? 'Loading…' : 'Load Projects' }}
+          </button>
         </div>
 
         <div class="youtrack-proxy-toggle">
@@ -440,18 +465,91 @@
             <code>-e YOUTRACK_URL=http://…</code> to <code>docker run</code>.
           </p>
         </div>
+
+        @if (stagedIssues().length > 0) {
+          <div class="staged-issues-section">
+            <mat-divider></mat-divider>
+            <div class="staged-issues-toolbar">
+              <span class="staged-count">
+                {{ selectedIssueCount() }} of {{ stagedIssues().length }} issues selected
+              </span>
+              <button mat-button (click)="selectAllIssues(true)">Select All</button>
+              <button mat-button (click)="selectAllIssues(false)">Deselect All</button>
+            </div>
+            <div class="staged-table-wrapper">
+              <table mat-table [dataSource]="stagedIssues()" [trackBy]="trackByStagedIssue" class="staged-issues-table">
+
+                <ng-container matColumnDef="select">
+                  <th mat-header-cell *matHeaderCellDef>
+                    <mat-checkbox
+                      [checked]="allIssuesSelected()"
+                      [indeterminate]="someIssuesSelected()"
+                      (change)="selectAllIssues($event.checked)">
+                    </mat-checkbox>
+                  </th>
+                  <td mat-cell *matCellDef="let row">
+                    <mat-checkbox
+                      [checked]="row.selected"
+                      (change)="setStagedIssueSelected(row.id, $event.checked)">
+                    </mat-checkbox>
+                  </td>
+                </ng-container>
+
+                <ng-container matColumnDef="operation">
+                  <th mat-header-cell *matHeaderCellDef>Operation</th>
+                  <td mat-cell *matCellDef="let row" class="operation-cell">{{ row.operationId }}</td>
+                </ng-container>
+
+                <ng-container matColumnDef="file">
+                  <th mat-header-cell *matHeaderCellDef>File</th>
+                  <td mat-cell *matCellDef="let row">
+                    <span class="file-type-badge file-type-{{ row.fileType }}">{{ row.fileType }}</span>
+                  </td>
+                </ng-container>
+
+                <ng-container matColumnDef="summary">
+                  <th mat-header-cell *matHeaderCellDef>Summary</th>
+                  <td mat-cell *matCellDef="let row" class="summary-cell">{{ row.summary }}</td>
+                </ng-container>
+
+                <ng-container matColumnDef="issueType">
+                  <th mat-header-cell *matHeaderCellDef>Issue Type</th>
+                  <td mat-cell *matCellDef="let row" class="issue-type-cell">
+                    <mat-form-field appearance="outline" subscriptSizing="dynamic" class="issue-type-field">
+                      <mat-select
+                        [value]="row.issueTypeId"
+                        (selectionChange)="setStagedIssueType(row.id, $event.value)"
+                        [disabled]="youTrackIssueTypes().length === 0">
+                        @if (youTrackIssueTypes().length === 0) {
+                          <mat-option disabled value="">Select project first</mat-option>
+                        }
+                        @for (t of youTrackIssueTypes(); track t.id) {
+                          <mat-option [value]="t.id">{{ t.name }}</mat-option>
+                        }
+                      </mat-select>
+                    </mat-form-field>
+                  </td>
+                </ng-container>
+
+                <tr mat-header-row *matHeaderRowDef="stagedIssueColumns"></tr>
+                <tr mat-row *matRowDef="let row; columns: stagedIssueColumns;"
+                    [class.row-deselected]="!row.selected"></tr>
+              </table>
+            </div>
+          </div>
+        }
       </mat-card-content>
 
       <mat-card-actions>
         <button mat-raised-button color="primary"
-                [disabled]="youTrackLoading() || !youTrackConfig().url || !youTrackConfig().token || !youTrackConfig().projectId"
+                [disabled]="youTrackLoading() || !youTrackConfig().url || !youTrackConfig().token || !youTrackConfig().projectId || selectedIssueCount() === 0"
                 (click)="createYouTrackIssues()">
           @if (youTrackLoading()) {
             <mat-spinner diameter="18" class="btn-spinner"></mat-spinner>
           } @else {
             <mat-icon>upload</mat-icon>
           }
-          {{ youTrackLoading() ? 'Creating issues…' : 'Create Issues in YouTrack' }}
+          {{ youTrackLoading() ? 'Creating issues…' : 'Create ' + selectedIssueCount() + ' Issue' + (selectedIssueCount() === 1 ? '' : 's') + ' in YouTrack' }}
         </button>
       </mat-card-actions>
 

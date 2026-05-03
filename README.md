@@ -21,6 +21,12 @@ docker run -p 8080:80 openapi-gen
 
 App available at <http://localhost:8080>
 
+Run with YouTrack integration:
+
+```bash
+docker run -e YOUTRACK_URL=http://127.0.0.1:8080 -p 80:80 openapi-gen
+```
+
 **Test**
 Test with docker
 
