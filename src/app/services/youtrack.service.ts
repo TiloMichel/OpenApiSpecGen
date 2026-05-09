@@ -13,7 +13,6 @@ import type {
 interface YouTrackIssueResponse {
   id: string;
   idReadable: string;
-  webUrl: string;
 }
 
 interface CustomFieldResponse {
@@ -49,20 +48,15 @@ export class YouTrackService {
     return useCaseFiles.map(file => {
       let opId: string;
       let fileType: 'overview' | 'csharp' | 'typescript';
-      let typeLabel: string;
-
       if (file.filename.startsWith('csharp/')) {
         opId = file.filename.slice('csharp/'.length, -'.md'.length);
         fileType = 'csharp';
-        typeLabel = ' — C#';
       } else if (file.filename.startsWith('typescript/')) {
         opId = file.filename.slice('typescript/'.length, -'.md'.length);
         fileType = 'typescript';
-        typeLabel = ' — TypeScript';
       } else {
         opId = file.filename.slice(0, -'.md'.length);
         fileType = 'overview';
-        typeLabel = '';
       }
 
       const title = this.extractTitle(file.content);
@@ -70,7 +64,7 @@ export class YouTrackService {
         id: `${opId}:${fileType}`,
         operationId: opId,
         fileType,
-        summary: `[Use Case] ${title}${typeLabel}`,
+        summary: title,
         description: file.content,
         selected: true,
         issueTypeId: '',
@@ -83,15 +77,22 @@ export class YouTrackService {
     staged: YouTrackStagedIssue[],
   ): Promise<YouTrackIssueResult[]> {
     const results: YouTrackIssueResult[] = [];
+    const created = new Map<string, Map<string, { internalId: string; readableId: string }>>();
+
     for (const issue of staged.filter(s => s.selected)) {
       try {
-        const created = await this.createIssue(config, issue.summary, issue.description, issue.issueTypeId);
+        const response = await this.createIssue(config, issue.summary, issue.description, issue.issueTypeId);
         results.push({
           operationId: issue.id,
           title: issue.summary,
           success: true,
-          issueId: created.idReadable,
-          issueUrl: created.webUrl,
+          issueId: response.idReadable,
+          issueUrl: `${config.url.replace(/\/$/, '')}/issue/${response.idReadable}`,
+        });
+        if (!created.has(issue.operationId)) created.set(issue.operationId, new Map());
+        created.get(issue.operationId)!.set(issue.fileType, {
+          internalId: response.id,
+          readableId: response.idReadable,
         });
       } catch (e) {
         results.push({
@@ -102,6 +103,20 @@ export class YouTrackService {
         });
       }
     }
+
+    for (const byFileType of created.values()) {
+      const overview = byFileType.get('overview');
+      if (!overview) continue;
+      for (const [fileType, issue] of byFileType) {
+        if (fileType === 'overview') continue;
+        try {
+          await this.linkIssue(config, overview.internalId, issue.readableId);
+        } catch (e) {
+          console.warn(`Failed to link overview ${overview.internalId} to ${issue.readableId}:`, e);
+        }
+      }
+    }
+
     return results;
   }
 
@@ -125,8 +140,18 @@ export class YouTrackService {
     }
     return firstValueFrom(
       this.http.post<YouTrackIssueResponse>(
-        `${this.getApiBase(config)}/api/issues?fields=id,idReadable,webUrl`,
+        `${this.getApiBase(config)}/api/issues?fields=id,idReadable`,
         body,
+        { headers: this.buildHeaders(config.token) },
+      ),
+    );
+  }
+
+  private async linkIssue(config: YouTrackConfig, parentInternalId: string, childReadableId: string): Promise<void> {
+    await firstValueFrom(
+      this.http.post(
+        `${this.getApiBase(config)}/api/commands`,
+        { query: `parent for ${childReadableId}`, issues: [{ id: parentInternalId }] },
         { headers: this.buildHeaders(config.token) },
       ),
     );
