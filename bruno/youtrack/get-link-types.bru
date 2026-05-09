@@ -1,0 +1,16 @@
+meta {
+  name: Get Link Types
+  type: http
+  seq: 5
+}
+
+get {
+  url: {{baseUrl}}/api/issueLinkTypes?fields=name,sourceToTarget,targetToSource
+  body: none
+  auth: none
+}
+
+headers {
+  Authorization: Bearer {{token}}
+  Accept: application/json
+}
