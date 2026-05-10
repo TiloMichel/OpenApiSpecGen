@@ -253,7 +253,7 @@ export class UseCaseGeneratorService {
     }
     if (schema.properties.length === 0) {
       return [
-        `export const ${schema.name}Schema = z.object({}).strict();`,
+        `export const ${schema.name}Schema = z.strictObject({});`,
         ``,
         `export type ${schema.name} = z.infer<typeof ${schema.name}Schema>;`,
       ];
@@ -262,9 +262,9 @@ export class UseCaseGeneratorService {
       `  ${p.pascalName}: ${this.typescript.toZodType(p.type, p.isRequired, p.isNullable)},`
     );
     return [
-      `export const ${schema.name}Schema = z.object({`,
+      `export const ${schema.name}Schema = z.strictObject({`,
       ...props,
-      `}).strict();`,
+      `});`,
       ``,
       `export type ${schema.name} = z.infer<typeof ${schema.name}Schema>;`,
     ];

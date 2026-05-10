@@ -24,10 +24,10 @@ export type UserDto = z.infer<typeof UserDtoSchema>;
 ### After
 
 ```typescript
-export const UserDtoSchema = z.object({
+export const UserDtoSchema = z.strictObject({
   id: z.number().int(),
   name: z.string(),
-}).strict();
+});
 
 export type UserDto = z.infer<typeof UserDtoSchema>;
 ```

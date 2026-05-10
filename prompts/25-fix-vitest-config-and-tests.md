@@ -33,9 +33,9 @@ export default defineConfig({
 - `environment: 'jsdom'` — provides browser-like globals (e.g. `window`)
 - `exclude: ['src/app/app.spec.ts']` — excludes the Angular TestBed component test, which must be run via `ng test` instead
 
-### Re-applied `.strict()` and empty line changes
+### Re-applied `z.strictObject()` and empty line changes
 
-Both `genZodObject` in `typescript-generator.service.ts` and `renderZodSchema` in `use-case-generator.service.ts` were reverted to their old state by the linter. The `.strict()` and empty line changes from prompt 24 were re-applied to both files.
+Both `genZodObject` in `typescript-generator.service.ts` and `renderZodSchema` in `use-case-generator.service.ts` were reverted to their old state by the linter. The `z.strictObject()` and empty line changes from prompts 24 and 26 were re-applied to both files.
 
 ### Updated stale test assertion
 
@@ -46,7 +46,7 @@ In `typescript-generator.service.spec.ts`, the empty object schema test was upda
 expect(output).toContain('export const EmptySchema = z.object({});');
 
 // after
-expect(output).toContain('export const EmptySchema = z.object({}).strict();');
+expect(output).toContain('export const EmptySchema = z.strictObject({});');
 ```
 
 ## Result
