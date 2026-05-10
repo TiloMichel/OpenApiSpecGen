@@ -278,8 +278,8 @@
         letter-spacing: 0.4px;
         white-space: nowrap;
 
-        &.file-type-overview   { background: var(--mat-sys-primary-container);   color: var(--mat-sys-on-primary-container); }
-        &.file-type-csharp     { background: var(--mat-sys-secondary-container); color: var(--mat-sys-on-secondary-container); }
+        &.file-type-overview   { background: #c8e6c9; color: #1b5e20; }
+        &.file-type-csharp     { background: #e1bee7; color: #4a148c; }
         &.file-type-typescript { background: var(--mat-sys-tertiary-container);  color: var(--mat-sys-on-tertiary-container); }
       }
 

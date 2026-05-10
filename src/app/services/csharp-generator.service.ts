@@ -91,8 +91,8 @@ export class CsharpGeneratorService {
       '{',
     ];
 
-    for (const op of tag.operations) {
-      lines.push('');
+    for (const [i, op] of tag.operations.entries()) {
+      if (i > 0) lines.push('');
       lines.push(...this.genAction(op, base).map(l => `    ${l}`));
     }
 
