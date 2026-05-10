@@ -276,33 +276,38 @@ describe('TypescriptGeneratorService', () => {
       expect(output).toContain('export class PetsService {');
     });
 
+    it('generates a public constructor', () => {
+      const output = service.generateServices(simpleSpec);
+      expect(output).toContain('public constructor(private http: HttpClient)');
+    });
+
     it('generates a GET method with no body for list', () => {
       const output = service.generateServices(simpleSpec);
-      expect(output).toContain('listPets(status?: string): Observable<Schemas.Pet[]>');
+      expect(output).toContain('public listPets(status?: string): Observable<Schemas.Pet[]>');
       expect(output).toContain("return this.http.get<Schemas.Pet[]>('/pets');");
     });
 
     it('generates a GET method with path param', () => {
       const output = service.generateServices(simpleSpec);
-      expect(output).toContain('getPetById(petId: number): Observable<Schemas.Pet>');
+      expect(output).toContain('public getPetById(petId: number): Observable<Schemas.Pet>');
       expect(output).toContain('return this.http.get<Schemas.Pet>(`/pets/${petId}`);');
     });
 
     it('generates a POST method with request body', () => {
       const output = service.generateServices(simpleSpec);
-      expect(output).toContain('createPet(request: Schemas.Pet): Observable<Schemas.Pet>');
+      expect(output).toContain('public createPet(request: Schemas.Pet): Observable<Schemas.Pet>');
       expect(output).toContain("return this.http.post<Schemas.Pet>('/pets', request);");
     });
 
     it('generates a PUT method with path param and request body', () => {
       const output = service.generateServices(simpleSpec);
-      expect(output).toContain('updatePet(petId: number, request: Schemas.Pet): Observable<Schemas.Pet>');
+      expect(output).toContain('public updatePet(petId: number, request: Schemas.Pet): Observable<Schemas.Pet>');
       expect(output).toContain('return this.http.put<Schemas.Pet>(`/pets/${petId}`, request);');
     });
 
     it('generates a DELETE method returning void', () => {
       const output = service.generateServices(simpleSpec);
-      expect(output).toContain('deletePet(petId: number): Observable<void>');
+      expect(output).toContain('public deletePet(petId: number): Observable<void>');
       expect(output).toContain('return this.http.delete(`/pets/${petId}`);');
     });
 
