@@ -79,9 +79,8 @@ Now injects both `CsharpGeneratorService` and `TypescriptGeneratorService`. For 
 **`{operationId}.md`** — `docs/use-cases/` — API overview (pure documentation, no code):
 
 - Method, path, summary header
-- Path and query parameter tables
-- `## Request Body` and `## Response` headings with the type label, each followed by a Markdown property table (`Field / Type / Required`) rendered from the referenced schema's properties
-- Nested `ref` properties recursively rendered as `###` sub-sections; enum schemas render as a `Value` table instead
+- Path and query parameter Mermaid class diagrams (one per section, showing field names and types with `?` for optional)
+- `## Request Body` and `## Response` headings with the type label, each followed by a single Mermaid class diagram containing all referenced schemas (objects as classes with typed fields, enums with `<<enumeration>>` stereotype, relationships as `-->` arrows)
 
 **`csharp/{operationId}.md`** — `docs/use-cases/csharp/` — C# code file:
 
@@ -99,7 +98,28 @@ Now injects both `CsharpGeneratorService` and `TypescriptGeneratorService`. For 
 
 - **`file structure`** — 3 files per operation (12 total for 4 ops), correct paths for all three types, multi-tag coverage
 - **`overview — general`** — title from summary / operationId fallback, method uppercase, full path
-- **`overview — parameters`** — path/query tables, optional marker, section absent when no params
-- **`overview — schema tables`** — request body and response headings with type label, `Pet[]` array notation, object property table, nested enum sub-section, array item schema dereferenced, sections absent when not applicable, no table for primitive types
-- **`C# file`** — `— C#` title, Controller Action and DTOs sections, HTTP attributes, route, `[FromRoute]`/`[FromQuery]`/`[FromBody]`, `ActionResult` / `IActionResult` / array variant, XML doc, recursive DTO resolution, deduplication
+- **`overview — parameters`** — path/query Mermaid diagrams, `?` suffix for optional params, section absent when no params
+- **`overview — schema diagrams`** — request body and response headings with type label, `Pet[]` array notation, Mermaid class diagram with typed fields, enum `<<enumeration>>` stereotype, relationship arrows, array item schema dereferenced, sections absent when not applicable, no diagram for primitive types
+- **`C# file`** — `— C#` title, Controller Action and DTOs sections, HTTP attributes, route, `[FromRoute]`/`[FromQuery]`/`[FromBody]`, `Task`/`Task<T>`/`IAsyncEnumerable<T>`, XML doc, recursive DTO resolution, deduplication
 - **`TypeScript file`** — `— TypeScript` title, Service Call section, camelCase method names, `Observable<Pet>` / `Observable<Pet[]>` / `Observable<void>`, typed path/query/body params, template-literal vs string URL, POST body in http call, JSDoc summary, Zod schemas with correct property types, DTOs absent for primitive responses
+
+---
+
+**User:** For the use case documentation use mermaid class diagrams instead of the markdown tables please
+
+**Assistant:** Replaced all markdown tables in the overview file with Mermaid class diagrams.
+
+### Updated: `src/app/services/use-case-generator.service.ts`
+
+- Removed `renderSchemaTable` (recursive table renderer with `### sub-sections`)
+- Added `renderParamsDiagram(params)` — renders a single `classDiagram` with a `Parameters` class; optional params get a `?` suffix on the type
+- Added `renderSchemaDiagram(rootType, schemaMap)` — collects all schemas reachable from the root type, then emits one `classDiagram` block containing every schema as a class (enums use `<<enumeration>>`) plus `-->` relationship arrows for ref properties
+- Added `mermaidTypeLabel(type)` — produces the plain type name for use inside Mermaid class members (e.g. `int`, `string`, `PetStatus[]`)
+- Added `ParsedParam` to the import list
+
+### Updated: `src/app/services/use-case-generator.service.spec.ts`
+
+- Renamed `'overview — schema tables'` describe block to `'overview — schema diagrams'`
+- Updated parameter tests to assert `classDiagram`, `+int petId`, `+string? status` instead of table rows
+- Updated schema tests to assert `classDiagram`, `class PetStatus {`, `<<enumeration>>`, `Pet --> PetStatus : status` instead of `| Field |` / `| Value |` rows
+- Updated the "primitive response" negative test to assert `not.toContain('classDiagram')` instead of `not.toContain('| Field |')`

@@ -4,6 +4,7 @@ import { TypescriptGeneratorService } from './typescript-generator.service';
 import type {
   ParsedSpec,
   ParsedOperation,
+  ParsedParam,
   ParsedType,
   ParsedSchema,
   GeneratedFile,
@@ -61,80 +62,93 @@ export class UseCaseGeneratorService {
       if (op.pathParams.length > 0) {
         lines.push('### Path Parameters');
         lines.push('');
-        lines.push('| Name | Type | Required |');
-        lines.push('|------|------|----------|');
-        for (const p of op.pathParams) {
-          lines.push(`| \`${p.originalName}\` | \`${this.typeLabel(p.type)}\` | Yes |`);
-        }
-        lines.push('');
+        lines.push(...this.renderParamsDiagram(op.pathParams));
       }
       if (op.queryParams.length > 0) {
         lines.push('### Query Parameters');
         lines.push('');
-        lines.push('| Name | Type | Required |');
-        lines.push('|------|------|----------|');
-        for (const p of op.queryParams) {
-          const req = p.isRequired ? 'Yes' : 'No';
-          lines.push(`| \`${p.originalName}\` | \`${this.typeLabel(p.type)}\` | ${req} |`);
-        }
-        lines.push('');
+        lines.push(...this.renderParamsDiagram(op.queryParams));
       }
     }
 
     if (op.requestBodyType) {
       lines.push(`## Request Body: \`${this.typeLabel(op.requestBodyType)}\``);
       lines.push('');
-      lines.push(...this.renderSchemaTable(op.requestBodyType, schemaMap, new Set()));
+      lines.push(...this.renderSchemaDiagram(op.requestBodyType, schemaMap));
     }
 
     if (op.responseType) {
       lines.push(`## Response: \`${this.typeLabel(op.responseType)}\``);
       lines.push('');
-      lines.push(...this.renderSchemaTable(op.responseType, schemaMap, new Set()));
+      lines.push(...this.renderSchemaDiagram(op.responseType, schemaMap));
     }
 
     return lines.join('\n');
   }
 
-  private renderSchemaTable(
-    type: ParsedType,
-    schemaMap: Map<string, ParsedSchema>,
-    rendered: Set<string>,
-  ): string[] {
-    const baseType = type.isArray ? { ...type, isArray: false } : type;
-    if (baseType.kind !== 'ref' || !baseType.refName) return [];
-    const schema = schemaMap.get(baseType.refName);
-    if (!schema || rendered.has(schema.name)) return [];
-    rendered.add(schema.name);
+  private renderParamsDiagram(params: ParsedParam[]): string[] {
+    const lines = ['```mermaid', 'classDiagram', '    class Parameters {'];
+    for (const p of params) {
+      const nullable = p.isRequired ? '' : '?';
+      lines.push(`        +${this.mermaidTypeLabel(p.type)}${nullable} ${p.originalName}`);
+    }
+    lines.push('    }', '```', '');
+    return lines;
+  }
 
-    const lines: string[] = [];
-    if (schema.kind === 'enum') {
-      lines.push('| Value |');
-      lines.push('|-------|');
-      for (const v of schema.enumValues) {
-        lines.push(`| \`${v}\` |`);
+  private renderSchemaDiagram(
+    rootType: ParsedType,
+    schemaMap: Map<string, ParsedSchema>,
+  ): string[] {
+    const toRender: ParsedSchema[] = [];
+    const seen = new Set<string>();
+
+    const collect = (type: ParsedType): void => {
+      const base = type.isArray ? { ...type, isArray: false } : type;
+      if (base.kind !== 'ref' || !base.refName) return;
+      const schema = schemaMap.get(base.refName);
+      if (!schema || seen.has(schema.name)) return;
+      seen.add(schema.name);
+      toRender.push(schema);
+      for (const p of schema.properties) collect(p.type);
+    };
+    collect(rootType);
+
+    if (toRender.length === 0) return [];
+
+    const lines = ['```mermaid', 'classDiagram'];
+
+    for (const schema of toRender) {
+      lines.push(`    class ${schema.name} {`);
+      if (schema.kind === 'enum') {
+        lines.push('        <<enumeration>>');
+        for (const v of schema.enumValues) lines.push(`        ${v}`);
+      } else {
+        for (const p of schema.properties) {
+          const nullable = (p.isRequired && !p.isNullable) ? '' : '?';
+          lines.push(`        +${this.mermaidTypeLabel(p.type)}${nullable} ${p.originalName}`);
+        }
       }
-      lines.push('');
-    } else {
-      lines.push('| Field | Type | Required |');
-      lines.push('|-------|------|----------|');
+      lines.push('    }');
+    }
+
+    for (const schema of toRender) {
+      if (schema.kind === 'enum') continue;
       for (const p of schema.properties) {
-        const req = p.isRequired ? 'Yes' : 'No';
-        lines.push(`| \`${p.originalName}\` | \`${this.typeLabel(p.type)}\` | ${req} |`);
-      }
-      lines.push('');
-      for (const p of schema.properties) {
-        if (p.type.kind === 'ref' && p.type.refName && !rendered.has(p.type.refName)) {
-          const nested = schemaMap.get(p.type.refName);
-          if (nested) {
-            lines.push(`### ${nested.name}${nested.kind === 'enum' ? ' (enum)' : ''}`);
-            lines.push('');
-            lines.push(...this.renderSchemaTable(p.type, schemaMap, rendered));
-          }
+        const base = p.type.isArray ? { ...p.type, isArray: false } : p.type;
+        if (base.kind === 'ref' && base.refName && seen.has(base.refName)) {
+          lines.push(`    ${schema.name} --> ${base.refName} : ${p.originalName}`);
         }
       }
     }
+
+    lines.push('```', '');
     return lines;
+  }
+
+  private mermaidTypeLabel(type: ParsedType): string {
+    const base = type.kind === 'ref' ? (type.refName ?? 'object') : type.kind;
+    return type.isArray ? `${base}[]` : base;
   }
 
   // ── C# ───────────────────────────────────────────────────────────────────────
