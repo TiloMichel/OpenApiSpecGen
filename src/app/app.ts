@@ -204,7 +204,7 @@ export class App {
     includeTypescriptSchemas: true,
     includeTypescriptServices: true,
     splitFiles: true,
-    includeUseCaseDocs: false,
+    includeUseCaseDocs: true,
   });
 
   protected selectedDtoFile = signal(0);
