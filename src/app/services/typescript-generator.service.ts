@@ -28,7 +28,8 @@ export class TypescriptGeneratorService {
   private genZodObject(schema: ParsedSchema): string[] {
     if (schema.properties.length === 0) {
       return [
-        `export const ${schema.name}Schema = z.object({});`,
+        `export const ${schema.name}Schema = z.object({}).strict();`,
+        ``,
         `export type ${schema.name} = z.infer<typeof ${schema.name}Schema>;`,
       ];
     }
@@ -38,7 +39,8 @@ export class TypescriptGeneratorService {
     return [
       `export const ${schema.name}Schema = z.object({`,
       ...props,
-      `});`,
+      `}).strict();`,
+      ``,
       `export type ${schema.name} = z.infer<typeof ${schema.name}Schema>;`,
     ];
   }
