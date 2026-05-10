@@ -123,7 +123,7 @@ export class TypescriptGeneratorService {
     const lines: string[] = [
       `@Injectable({ providedIn: 'root' })`,
       `export class ${name}Service {`,
-      `  constructor(private http: HttpClient) {}`,
+      `  public constructor(private http: HttpClient) {}`,
     ];
 
     for (const op of tag.operations) {
@@ -144,7 +144,7 @@ export class TypescriptGeneratorService {
 
     const lines: string[] = [];
     if (op.summary) lines.push(`/** ${op.summary} */`);
-    lines.push(`${methodName}(${params}): Observable<${returnTsType}> {`);
+    lines.push(`public ${methodName}(${params}): Observable<${returnTsType}> {`);
     lines.push(`  return ${httpCall};`);
     lines.push(`}`);
     return lines;

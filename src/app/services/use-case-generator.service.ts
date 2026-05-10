@@ -303,7 +303,7 @@ export class UseCaseGeneratorService {
 
     const lines: string[] = [];
     if (op.summary) lines.push(`/** ${op.summary} */`);
-    lines.push(`${methodName}(${params}): Observable<${returnType}> {`);
+    lines.push(`public ${methodName}(${params}): Observable<${returnType}> {`);
     lines.push(`  return ${httpCall};`);
     lines.push(`}`);
     return lines;
