@@ -183,7 +183,7 @@ describe('TypescriptGeneratorService', () => {
         tags: [],
       };
       const output = service.generateSchemas(spec);
-      expect(output).toContain('export const EmptySchema = z.object({});');
+      expect(output).toContain('export const EmptySchema = z.object({}).strict();');
     });
   });
 
