@@ -6,7 +6,7 @@ export class CsharpGeneratorService {
 
   // ── DTOs ────────────────────────────────────────────────────────────────────
 
-  generateDtos(spec: ParsedSpec): string {
+  public generateDtos(spec: ParsedSpec): string {
     const ns = this.toNamespace(spec.title);
     const lines: string[] = [`namespace ${ns}.Dtos;`];
     for (const schema of spec.schemas) {
@@ -16,7 +16,7 @@ export class CsharpGeneratorService {
     return lines.join('\n');
   }
 
-  generateDtoFiles(spec: ParsedSpec): GeneratedFile[] {
+  public generateDtoFiles(spec: ParsedSpec): GeneratedFile[] {
     const ns = this.toNamespace(spec.title);
     return spec.schemas.map(schema => {
       const body = schema.kind === 'enum' ? this.genEnum(schema) : this.genRecord(schema);
@@ -49,7 +49,7 @@ export class CsharpGeneratorService {
 
   // ── Controllers ─────────────────────────────────────────────────────────────
 
-  generateControllers(spec: ParsedSpec): string {
+  public generateControllers(spec: ParsedSpec): string {
     const ns = this.toNamespace(spec.title);
     const lines: string[] = [
       `using Microsoft.AspNetCore.Mvc;`,
@@ -59,13 +59,13 @@ export class CsharpGeneratorService {
       '',
     ];
     for (const tag of spec.tags) {
-      lines.push(...this.genController(tag, ns));
+      lines.push(...this.genController(tag));
       lines.push('');
     }
     return lines.join('\n');
   }
 
-  generateControllerFiles(spec: ParsedSpec): GeneratedFile[] {
+  public generateControllerFiles(spec: ParsedSpec): GeneratedFile[] {
     const ns = this.toNamespace(spec.title);
     return spec.tags.map(tag => {
       const className = `${this.toPascalCase(tag.name)}Controller`;
@@ -75,14 +75,14 @@ export class CsharpGeneratorService {
         '',
         `namespace ${ns}.Controllers;`,
         '',
-        ...this.genController(tag, ns),
+        ...this.genController(tag),
         '',
       ].join('\n');
       return { filename: `${className}.cs`, path: `csharp/Controllers/${className}.cs`, content };
     });
   }
 
-  private genController(tag: ParsedTag, _ns: string): string[] {
+  private genController(tag: ParsedTag): string[] {
     const name = `${this.toPascalCase(tag.name)}Controller`;
     const base = `/${tag.name.toLowerCase()}`;
 
@@ -110,14 +110,21 @@ export class CsharpGeneratorService {
     const routeArg = relRoute ? `("${relRoute}")` : '';
     lines.push(`[Http${this.capitalize(op.method)}${routeArg}]`);
 
-    const returnType = op.responseType
-      ? `ActionResult<${this.toCsType(op.responseType, true)}>`
-      : 'IActionResult';
+    const returnType = this.actionReturnType(op);
     const params = this.actionParams(op);
     lines.push(`public ${returnType} ${this.toPascalCase(op.operationId)}(${params})`);
     lines.push(`    => throw new NotImplementedException();`);
 
     return lines;
+  }
+
+  private actionReturnType(op: ParsedOperation): string {
+    if (!op.responseType) return 'Task';
+    if (op.responseType.isArray) {
+      const inner = this.toCsType({ ...op.responseType, isArray: false }, true);
+      return `IAsyncEnumerable<${inner}>`;
+    }
+    return `Task<${this.toCsType(op.responseType, true)}>`;
   }
 
   private relativeRoute(fullPath: string, base: string): string {
@@ -138,7 +145,7 @@ export class CsharpGeneratorService {
 
   // ── Type mapping ────────────────────────────────────────────────────────────
 
-  toCsType(type: ParsedType, isRequired: boolean): string {
+  public toCsType(type: ParsedType, isRequired: boolean): string {
     if (type.isArray) {
       const inner = this.toCsType({ ...type, isArray: false }, true);
       return `IReadOnlyList<${inner}>${isRequired ? '' : '?'}`;

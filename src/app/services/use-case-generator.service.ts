@@ -16,7 +16,7 @@ export class UseCaseGeneratorService {
     private typescript: TypescriptGeneratorService,
   ) {}
 
-  generateUseCaseFiles(spec: ParsedSpec): GeneratedFile[] {
+  public generateUseCaseFiles(spec: ParsedSpec): GeneratedFile[] {
     const files: GeneratedFile[] = [];
     for (const tag of spec.tags) {
       const controllerBase = `/${tag.name.toLowerCase()}`;
@@ -177,9 +177,15 @@ export class UseCaseGeneratorService {
     const routeArg = relRoute ? `("${relRoute}")` : '';
     lines.push(`[Http${this.capitalize(op.method)}${routeArg}]`);
 
-    const returnType = op.responseType
-      ? `ActionResult<${this.csharp.toCsType(op.responseType, true)}>`
-      : 'IActionResult';
+    let returnType: string;
+    if (!op.responseType) {
+      returnType = 'Task';
+    } else if (op.responseType.isArray) {
+      const inner = this.csharp.toCsType({ ...op.responseType, isArray: false }, true);
+      returnType = `IAsyncEnumerable<${inner}>`;
+    } else {
+      returnType = `Task<${this.csharp.toCsType(op.responseType, true)}>`;
+    }
     const params = [
       ...op.pathParams.map(p => `[FromRoute] ${this.csharp.toCsType(p.type, true)} ${p.camelName}`),
       ...op.queryParams.map(p => `[FromQuery] ${this.csharp.toCsType(p.type, p.isRequired)} ${p.camelName}`),
