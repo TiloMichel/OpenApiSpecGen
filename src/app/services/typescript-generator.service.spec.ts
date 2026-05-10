@@ -118,8 +118,16 @@ describe('TypescriptGeneratorService', () => {
       expect(service.toZodType(t('string', true), true)).toBe('z.array(z.string())');
     });
 
-    it('appends .nullable() for nullable', () => {
+    it('appends .nullable() for nullable required property', () => {
       expect(service.toZodType(t('string'), true, true)).toBe('z.string().nullable()');
+    });
+
+    it('appends .nullable() for non-required property', () => {
+      expect(service.toZodType(t('string'), false)).toBe('z.string().nullable()');
+    });
+
+    it('appends .nullable() for nullable non-required property', () => {
+      expect(service.toZodType(t('string'), false, true)).toBe('z.string().nullable()');
     });
   });
 
@@ -166,14 +174,33 @@ describe('TypescriptGeneratorService', () => {
       expect(output).toContain('Name: z.string(),');
     });
 
-    it('inlines enum refs in object schema', () => {
+    it('inlines enum refs in object schema and marks nullable when non-required', () => {
       const output = service.generateSchemas(simpleSpec);
-      expect(output).toContain("Status: z.enum(['active', 'inactive']),");
+      expect(output).toContain("Status: z.enum(['active', 'inactive']).nullable(),");
     });
 
-    it('generates array zod type', () => {
+    it('generates array zod type and marks nullable when non-required', () => {
       const output = service.generateSchemas(simpleSpec);
-      expect(output).toContain('Tags: z.array(z.string()),');
+      expect(output).toContain('Tags: z.array(z.string()).nullable(),');
+    });
+
+    it('makes non-required properties nullable', () => {
+      const spec: ParsedSpec = {
+        ...simpleSpec,
+        schemas: [{
+          name: 'Example',
+          kind: 'object',
+          enumValues: [],
+          properties: [
+            { originalName: 'req', pascalName: 'Req', type: { kind: 'string', isArray: false }, isRequired: true,  isNullable: false },
+            { originalName: 'opt', pascalName: 'Opt', type: { kind: 'int',    isArray: false }, isRequired: false, isNullable: false },
+          ],
+        }],
+        tags: [],
+      };
+      const output = service.generateSchemas(spec);
+      expect(output).toContain('Req: z.string(),');
+      expect(output).toContain('Opt: z.number().int().nullable(),');
     });
 
     it('handles empty object schema', () => {

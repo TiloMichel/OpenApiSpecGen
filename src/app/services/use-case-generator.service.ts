@@ -210,7 +210,7 @@ export class UseCaseGeneratorService {
     if (schema.properties.length === 0) return [`public record ${schema.name}();`];
     const params = schema.properties.map((p, i) => {
       const suffix = i < schema.properties.length - 1 ? ',' : ');';
-      return `    ${this.csharp.toCsType(p.type, !p.isNullable)} ${p.pascalName}${suffix}`;
+      return `    ${this.csharp.toCsType(p.type, p.isRequired && !p.isNullable)} ${p.pascalName}${suffix}`;
     });
     return [`public record ${schema.name}(`, ...params];
   }

@@ -85,20 +85,29 @@ COPY . .
 CMD ["npm", "run", "lint"]
 ```
 
-### GitHub Actions lint job
+### GitHub Actions lint workflow
 
-Added a `lint` job to `.github/workflows/test.yml` that builds the Docker lint stage and runs it:
+The lint job was moved to its own workflow file `.github/workflows/lint.yml`:
 
 ```yaml
-lint:
-  runs-on: ubuntu-latest
+name: Lint
 
-  steps:
-    - uses: actions/checkout@v4
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
 
-    - name: Build lint image
-      run: docker build --target lint -t openapi-gen-lint .
+jobs:
+  lint:
+    runs-on: ubuntu-latest
 
-    - name: Run lint
-      run: docker run --rm openapi-gen-lint
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build lint image
+        run: docker build --target lint -t openapi-gen-lint .
+
+      - name: Run lint
+        run: docker run --rm openapi-gen-lint
 ```
