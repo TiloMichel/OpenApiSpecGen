@@ -60,11 +60,11 @@ const BASE_THEME = EditorView.theme({
 export class SpecEditorComponent implements AfterViewInit, OnDestroy {
   @ViewChild('editorHost', { static: true }) protected editorHost!: ElementRef<HTMLDivElement>;
 
-  protected content  = input<string>('');
-  protected darkMode = input<boolean>(false);
-  protected filename = input<string>('');
+  public content  = input<string>('');
+  public darkMode = input<boolean>(false);
+  public filename = input<string>('');
 
-  protected contentChange = output<string>();
+  public contentChange = output<string>();
 
   private editor?: EditorView;
   private readonly langConf  = new Compartment();

@@ -44,11 +44,11 @@ const BASE_THEME = EditorView.theme({
 export class CodeEditorComponent implements AfterViewInit, OnDestroy {
   @ViewChild('editorHost', { static: true }) protected editorHost!: ElementRef<HTMLDivElement>;
 
-  protected content  = input<string>('');
-  protected language = input<CodeLanguage>('typescript');
-  protected darkMode = input<boolean>(false);
+  public content  = input<string>('');
+  public language = input<CodeLanguage>('typescript');
+  public darkMode = input<boolean>(false);
 
-  protected contentChange = output<string>();
+  public contentChange = output<string>();
 
   private editor?: EditorView;
   private readonly langConf  = new Compartment();
