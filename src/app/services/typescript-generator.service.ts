@@ -194,6 +194,7 @@ export class TypescriptGeneratorService {
 
     switch (type.kind) {
       case 'string': return 'z.string()';
+      case 'uuid':   return 'z.string().uuid()';
       case 'int':
       case 'long':   return 'z.number().int()';
       case 'float':
@@ -212,7 +213,7 @@ export class TypescriptGeneratorService {
   public toTsType(type: ParsedType): string {
     if (type.isArray) return `${this.toTsType({ ...type, isArray: false })}[]`;
     switch (type.kind) {
-      case 'string':                    return 'string';
+      case 'string': case 'uuid':        return 'string';
       case 'int': case 'long':
       case 'float': case 'double':      return 'number';
       case 'bool':                      return 'boolean';

@@ -66,7 +66,7 @@ export interface ParsedProperty {
   isNullable: boolean;
 }
 
-export type ParsedTypeKind = 'string' | 'int' | 'long' | 'float' | 'double' | 'bool' | 'enum' | 'ref' | 'any';
+export type ParsedTypeKind = 'string' | 'uuid' | 'int' | 'long' | 'float' | 'double' | 'bool' | 'enum' | 'ref' | 'any';
 
 export interface ParsedType {
   kind: ParsedTypeKind;
