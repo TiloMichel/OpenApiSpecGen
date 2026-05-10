@@ -158,20 +158,21 @@ describe('UseCaseGeneratorService', () => {
   // ── Overview — parameters ────────────────────────────────────────────────────
 
   describe('overview — parameters', () => {
-    it('renders path parameters table', () => {
+    it('renders path parameters as a Mermaid class diagram', () => {
       const files = service.generateUseCaseFiles(simpleSpec);
       const c = overview(files, 'getPetById').content;
       expect(c).toContain('### Path Parameters');
-      expect(c).toContain('`petId`');
-      expect(c).toContain('`int`');
+      expect(c).toContain('```mermaid');
+      expect(c).toContain('classDiagram');
+      expect(c).toContain('+int petId');
     });
 
-    it('renders query parameters table', () => {
+    it('renders optional query parameters with ? suffix in diagram', () => {
       const files = service.generateUseCaseFiles(simpleSpec);
       const c = overview(files, 'listPets').content;
       expect(c).toContain('### Query Parameters');
-      expect(c).toContain('`status`');
-      expect(c).toContain('No');
+      expect(c).toContain('classDiagram');
+      expect(c).toContain('+string? status');
     });
 
     it('omits parameters section when there are none', () => {
@@ -180,9 +181,9 @@ describe('UseCaseGeneratorService', () => {
     });
   });
 
-  // ── Overview — schema tables ─────────────────────────────────────────────────
+  // ── Overview — schema diagrams ───────────────────────────────────────────────
 
-  describe('overview — schema tables', () => {
+  describe('overview — schema diagrams', () => {
     it('renders request body heading with type label', () => {
       const files = service.generateUseCaseFiles(simpleSpec);
       expect(overview(files, 'createPet').content).toContain('## Request Body: `Pet`');
@@ -198,31 +199,35 @@ describe('UseCaseGeneratorService', () => {
       expect(overview(files, 'listPets').content).toContain('## Response: `Pet[]`');
     });
 
-    it('renders object schema as a property table', () => {
+    it('renders object schema as a Mermaid class diagram', () => {
       const files = service.generateUseCaseFiles(simpleSpec);
       const c = overview(files, 'getPetById').content;
-      expect(c).toContain('| Field | Type | Required |');
-      expect(c).toContain('`id`');
-      expect(c).toContain('`int`');
-      expect(c).toContain('`name`');
-      expect(c).toContain('`string`');
+      expect(c).toContain('```mermaid');
+      expect(c).toContain('classDiagram');
+      expect(c).toContain('+int id');
+      expect(c).toContain('+string name');
     });
 
-    it('renders nested enum schema as a sub-section table', () => {
+    it('renders nested enum schema in the same class diagram', () => {
       const files = service.generateUseCaseFiles(simpleSpec);
       const c = overview(files, 'getPetById').content;
-      expect(c).toContain('### PetStatus (enum)');
-      expect(c).toContain('| Value |');
-      expect(c).toContain('`available`');
-      expect(c).toContain('`sold`');
+      expect(c).toContain('class PetStatus {');
+      expect(c).toContain('<<enumeration>>');
+      expect(c).toContain('available');
+      expect(c).toContain('sold');
     });
 
-    it('renders the array item schema table for array response types', () => {
+    it('renders relationship arrow between object and referenced schema', () => {
+      const files = service.generateUseCaseFiles(simpleSpec);
+      const c = overview(files, 'getPetById').content;
+      expect(c).toContain('Pet --> PetStatus : status');
+    });
+
+    it('renders array item schema diagram for array response types', () => {
       const files = service.generateUseCaseFiles(simpleSpec);
       const c = overview(files, 'listPets').content;
-      // Pet schema table should still appear even though response is Pet[]
-      expect(c).toContain('| Field | Type | Required |');
-      expect(c).toContain('`id`');
+      expect(c).toContain('classDiagram');
+      expect(c).toContain('+int id');
     });
 
     it('omits request body section when no body', () => {
@@ -235,7 +240,7 @@ describe('UseCaseGeneratorService', () => {
       expect(overview(files, 'deletePet').content).not.toContain('## Response');
     });
 
-    it('does not render schema tables for primitive response types', () => {
+    it('does not render schema diagram for primitive response types', () => {
       const spec: ParsedSpec = {
         ...simpleSpec,
         tags: [{
@@ -249,7 +254,7 @@ describe('UseCaseGeneratorService', () => {
         }],
       };
       const files = service.generateUseCaseFiles(spec);
-      expect(overview(files, 'getTest').content).not.toContain('| Field |');
+      expect(overview(files, 'getTest').content).not.toContain('classDiagram');
     });
   });
 
