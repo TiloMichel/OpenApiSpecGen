@@ -133,12 +133,12 @@ describe('CsharpGeneratorService', () => {
       expect(output).toContain('string? Tag');
     });
 
-    it('generates an enum for enum schemas', () => {
+    it('generates an enum for enum schemas with numeric values', () => {
       const output = service.generateDtos(simpleSpec);
       expect(output).toContain('public enum Status');
-      expect(output).toContain('active,');
-      expect(output).toContain('inactive,');
-      expect(output).toContain('pending');
+      expect(output).toContain('active = 0,');
+      expect(output).toContain('inactive = 1,');
+      expect(output).toContain('pending = 2,');
     });
 
     it('handles an empty object schema', () => {

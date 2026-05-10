@@ -215,9 +215,7 @@ export class UseCaseGeneratorService {
       return [
         `public enum ${schema.name}`,
         '{',
-        ...schema.enumValues.map((v, i) =>
-          `    ${v}${i < schema.enumValues.length - 1 ? ',' : ''}`
-        ),
+        ...schema.enumValues.map((v, i) => `    ${v} = ${i},`),
         '}',
       ];
     }
@@ -265,10 +263,10 @@ export class UseCaseGeneratorService {
 
   private renderZodSchema(schema: ParsedSchema): string[] {
     if (schema.kind === 'enum') {
-      const vals = schema.enumValues.map(v => `'${v}'`).join(', ');
       return [
-        `export const ${schema.name}Schema = z.enum([${vals}]);`,
-        `export type ${schema.name} = z.infer<typeof ${schema.name}Schema>;`,
+        `export enum ${schema.name} {`,
+        ...schema.enumValues.map((v, i) => `  ${v} = ${i},`),
+        `}`,
       ];
     }
     if (schema.properties.length === 0) {
@@ -345,8 +343,8 @@ export class UseCaseGeneratorService {
       const schema = schemaMap.get(type.refName);
       if (!schema || seen.has(schema.name)) return;
       seen.add(schema.name);
-      result.push(schema);
       for (const prop of schema.properties) visit(prop.type);
+      result.push(schema);
     };
 
     for (const p of [...op.pathParams, ...op.queryParams]) visit(p.type);
