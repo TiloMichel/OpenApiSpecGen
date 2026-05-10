@@ -27,7 +27,7 @@ describe('UseCaseGeneratorService', () => {
         properties: [
           { originalName: 'id',     pascalName: 'Id',     type: { kind: 'int',    isArray: false },              isRequired: true,  isNullable: false },
           { originalName: 'name',   pascalName: 'Name',   type: { kind: 'string', isArray: false },              isRequired: true,  isNullable: false },
-          { originalName: 'status', pascalName: 'Status', type: { kind: 'ref',    isArray: false, refName: 'PetStatus' }, isRequired: true, isNullable: false },
+          { originalName: 'status', pascalName: 'Status', type: { kind: 'ref',    isArray: false, refName: 'PetStatus', enumValues: ['available', 'sold'] }, isRequired: true, isNullable: false },
         ],
       },
       {
@@ -333,11 +333,13 @@ describe('UseCaseGeneratorService', () => {
       expect(c).toContain('public record Pet(');
     });
 
-    it('includes recursively referenced enum in DTOs', () => {
+    it('includes recursively referenced enum in DTOs with numeric values', () => {
       const files = service.generateUseCaseFiles(simpleSpec);
       const c = csharpDoc(files, 'getPetById').content;
       expect(c).toContain('### PetStatus');
       expect(c).toContain('public enum PetStatus');
+      expect(c).toContain('available = 0,');
+      expect(c).toContain('sold = 1,');
     });
 
     it('deduplicates schemas referenced in both body and response', () => {
@@ -483,11 +485,13 @@ describe('UseCaseGeneratorService', () => {
       expect(c).toContain('export type Pet = z.infer<typeof PetSchema>;');
     });
 
-    it('renders enum schema as Zod enum', () => {
+    it('renders enum schema as a native TypeScript enum with no schema const', () => {
       const files = service.generateUseCaseFiles(simpleSpec);
       const c = tsDoc(files, 'getPetById').content;
-      expect(c).toContain("export const PetStatusSchema = z.enum(['available', 'sold']);");
-      expect(c).toContain('export type PetStatus = z.infer<typeof PetStatusSchema>;');
+      expect(c).toContain('export enum PetStatus {');
+      expect(c).toContain('available = 0,');
+      expect(c).toContain('sold = 1,');
+      expect(c).not.toContain('PetStatusSchema');
     });
 
     it('renders Zod properties using correct types', () => {
@@ -495,7 +499,7 @@ describe('UseCaseGeneratorService', () => {
       const c = tsDoc(files, 'getPetById').content;
       expect(c).toContain('Id: z.number().int(),');
       expect(c).toContain('Name: z.string(),');
-      expect(c).toContain('Status: PetStatusSchema,');
+      expect(c).toContain('Status: z.nativeEnum(PetStatus),');
     });
 
     it('omits DTOs section when no refs', () => {

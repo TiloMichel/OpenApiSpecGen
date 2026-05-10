@@ -29,9 +29,7 @@ export class CsharpGeneratorService {
     return [
       `public enum ${schema.name}`,
       '{',
-      ...schema.enumValues.map((v, i) =>
-        `    ${this.validIdentifier(v)}${i < schema.enumValues.length - 1 ? ',' : ''}`
-      ),
+      ...schema.enumValues.map((v, i) => `    ${this.validIdentifier(v)} = ${i},`),
       '}',
     ];
   }

@@ -102,12 +102,12 @@ describe('TypescriptGeneratorService', () => {
     it('maps bool', () => expect(service.toZodType(t('bool'), true)).toBe('z.boolean()'));
     it('maps unknown to z.unknown()', () => expect(service.toZodType(t('any'), true)).toBe('z.unknown()'));
 
-    it('maps ref without enum values to SchemaRef', () => {
+    it('maps ref to SchemaRef', () => {
       expect(service.toZodType(t('ref', false, { refName: 'Pet' }), true)).toBe('PetSchema');
     });
 
-    it('inlines enum values for ref with enumValues', () => {
-      expect(service.toZodType(t('ref', false, { refName: 'Status', enumValues: ['a', 'b'] }), true)).toBe("z.enum(['a', 'b'])");
+    it('inlines z.nativeEnum for enum refs', () => {
+      expect(service.toZodType(t('ref', false, { refName: 'Status', enumValues: ['a', 'b'] }), true)).toBe('z.nativeEnum(Status)');
     });
 
     it('maps inline enum', () => {
@@ -161,10 +161,11 @@ describe('TypescriptGeneratorService', () => {
       expect(output).toContain("import { z } from 'zod';");
     });
 
-    it('generates an enum schema', () => {
+    it('generates a native TypeScript enum', () => {
       const output = service.generateSchemas(simpleSpec);
-      expect(output).toContain("export const StatusSchema = z.enum(['active', 'inactive']);");
-      expect(output).toContain('export type Status = z.infer<typeof StatusSchema>;');
+      expect(output).toContain('export enum Status {');
+      expect(output).toContain('active = 0,');
+      expect(output).toContain('inactive = 1,');
     });
 
     it('generates an object schema', () => {
@@ -174,9 +175,9 @@ describe('TypescriptGeneratorService', () => {
       expect(output).toContain('Name: z.string(),');
     });
 
-    it('inlines enum refs in object schema and marks nullable when non-required', () => {
+    it('inlines z.nativeEnum in object schema and marks nullable when non-required', () => {
       const output = service.generateSchemas(simpleSpec);
-      expect(output).toContain("Status: z.enum(['active', 'inactive']).nullable(),");
+      expect(output).toContain('Status: z.nativeEnum(Status).nullable(),');
     });
 
     it('generates array zod type and marks nullable when non-required', () => {
@@ -254,9 +255,15 @@ describe('TypescriptGeneratorService', () => {
       expect(petFile.content).toContain("import { OwnerSchema } from './Owner.schema';");
     });
 
-    it('schema file does not import enum refs (they are inlined)', () => {
+    it('schema file imports enum value (not schema const) for z.nativeEnum usage', () => {
       const petFile = service.generateSchemaFiles(simpleSpec).find(f => f.filename === 'Pet.schema.ts')!;
-      expect(petFile.content).not.toContain("import { StatusSchema }");
+      expect(petFile.content).toContain("import { Status } from './Status.schema';");
+    });
+
+    it('enum schema file has no z import', () => {
+      const statusFile = service.generateSchemaFiles(simpleSpec).find(f => f.filename === 'Status.schema.ts')!;
+      expect(statusFile.content).not.toContain("import { z }");
+      expect(statusFile.content).toContain('export enum Status {');
     });
   });
 

@@ -18,10 +18,10 @@ export class TypescriptGeneratorService {
   }
 
   private genZodEnum(schema: ParsedSchema): string[] {
-    const vals = schema.enumValues.map(v => `'${v}'`).join(', ');
     return [
-      `export const ${schema.name}Schema = z.enum([${vals}]);`,
-      `export type ${schema.name} = z.infer<typeof ${schema.name}Schema>;`,
+      `export enum ${schema.name} {`,
+      ...schema.enumValues.map((v, i) => `  ${v} = ${i},`),
+      `}`,
     ];
   }
 
@@ -68,17 +68,21 @@ export class TypescriptGeneratorService {
     const schemaNames = new Set(spec.schemas.map(s => s.name));
 
     const files: GeneratedFile[] = spec.schemas.map(schema => {
-      const importRefs = new Set<string>();
+      const enumRefs = new Set<string>();
+      const objectRefs = new Set<string>();
       for (const prop of schema.properties) {
         const t = prop.type.isArray ? { ...prop.type, isArray: false } : prop.type;
-        // Enum refs are inlined by zodBase; only object refs need an import
-        if (t.kind === 'ref' && t.refName && !t.enumValues && schemaNames.has(t.refName)) {
-          importRefs.add(t.refName);
+        if (t.kind === 'ref' && t.refName && schemaNames.has(t.refName)) {
+          (t.enumValues ? enumRefs : objectRefs).add(t.refName);
         }
       }
 
-      const lines: string[] = [`import { z } from 'zod';`];
-      for (const ref of [...importRefs].sort()) {
+      const lines: string[] = [];
+      if (schema.kind !== 'enum') lines.push(`import { z } from 'zod';`);
+      for (const ref of [...enumRefs].sort()) {
+        lines.push(`import { ${ref} } from './${ref}.schema';`);
+      }
+      for (const ref of [...objectRefs].sort()) {
         lines.push(`import { ${ref}Schema } from './${ref}.schema';`);
       }
       lines.push('');
@@ -197,7 +201,7 @@ export class TypescriptGeneratorService {
       case 'bool':   return 'z.boolean()';
       case 'ref':
         return type.enumValues
-          ? `z.enum([${type.enumValues.map(v => `'${v}'`).join(', ')}])`
+          ? `z.nativeEnum(${type.refName})`
           : `${type.refName}Schema`;
       case 'enum':
         return `z.enum([${(type.enumValues ?? []).map(v => `'${v}'`).join(', ')}])`;
