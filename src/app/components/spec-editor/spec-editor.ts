@@ -58,21 +58,21 @@ const BASE_THEME = EditorView.theme({
   styleUrl: './spec-editor.scss',
 })
 export class SpecEditorComponent implements AfterViewInit, OnDestroy {
-  @ViewChild('editorHost', { static: true }) editorHost!: ElementRef<HTMLDivElement>;
+  @ViewChild('editorHost', { static: true }) protected editorHost!: ElementRef<HTMLDivElement>;
 
-  content  = input<string>('');
-  darkMode = input<boolean>(false);
-  filename = input<string>('');
+  protected content  = input<string>('');
+  protected darkMode = input<boolean>(false);
+  protected filename = input<string>('');
 
-  contentChange = output<string>();
+  protected contentChange = output<string>();
 
   private editor?: EditorView;
-  private langConf  = new Compartment();
-  private themeConf = new Compartment();
+  private readonly langConf  = new Compartment();
+  private readonly themeConf = new Compartment();
   private externalUpdate = false;
-  private snackBar = inject(MatSnackBar);
+  private readonly snackBar = inject(MatSnackBar);
 
-  lang = computed<Lang>(() => {
+  protected lang = computed<Lang>(() => {
     const name = this.filename().toLowerCase();
     if (name.endsWith('.json')) return 'json';
     if (name.endsWith('.yaml') || name.endsWith('.yml')) return 'yaml';
@@ -80,7 +80,7 @@ export class SpecEditorComponent implements AfterViewInit, OnDestroy {
     return trimmed.startsWith('{') || trimmed.startsWith('[') ? 'json' : 'yaml';
   });
 
-  constructor() {
+  public constructor() {
     // Sync external content changes into the editor
     effect(() => {
       const newContent = this.content();
@@ -110,7 +110,7 @@ export class SpecEditorComponent implements AfterViewInit, OnDestroy {
     });
   }
 
-  ngAfterViewInit(): void {
+  public ngAfterViewInit(): void {
     this.editor = new EditorView({
       state: EditorState.create({
         doc: this.content(),
@@ -130,11 +130,11 @@ export class SpecEditorComponent implements AfterViewInit, OnDestroy {
     });
   }
 
-  ngOnDestroy(): void {
+  public ngOnDestroy(): void {
     this.editor?.destroy();
   }
 
-  format(): void {
+  protected format(): void {
     if (!this.editor) return;
     const content = this.editor.state.doc.toString();
     try {
@@ -155,7 +155,7 @@ export class SpecEditorComponent implements AfterViewInit, OnDestroy {
     }
   }
 
-  private langExtension(lang: Lang) {
+  private langExtension(lang: Lang): ReturnType<typeof json> | ReturnType<typeof StreamLanguage.define> {
     return lang === 'json' ? json() : StreamLanguage.define(yamlMode);
   }
 }

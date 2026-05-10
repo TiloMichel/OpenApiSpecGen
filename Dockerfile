@@ -14,7 +14,15 @@ RUN npm ci
 COPY . .
 CMD ["npx", "ng", "test", "--watch=false"]
 
-# Stage 3 — serve
+# Stage 3 — lint
+FROM node:22-alpine AS lint
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci
+COPY . .
+CMD ["npm", "run", "lint"]
+
+# Stage 4 — serve
 FROM nginx:alpine
 COPY --from=builder /app/dist/openapi-spec-generator/browser /usr/share/nginx/html
 COPY nginx.conf /etc/nginx/nginx.conf.template

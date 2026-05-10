@@ -6,7 +6,7 @@ export class TypescriptGeneratorService {
 
   // ── Zod schemas ─────────────────────────────────────────────────────────────
 
-  generateSchemas(spec: ParsedSpec): string {
+  public generateSchemas(spec: ParsedSpec): string {
     const lines: string[] = [`import { z } from 'zod';`];
 
     for (const schema of spec.schemas) {
@@ -47,7 +47,7 @@ export class TypescriptGeneratorService {
 
   // ── Angular HTTP services ───────────────────────────────────────────────────
 
-  generateServices(spec: ParsedSpec): string {
+  public generateServices(spec: ParsedSpec): string {
     const lines: string[] = [
       `import { Injectable } from '@angular/core';`,
       `import { HttpClient } from '@angular/common/http';`,
@@ -64,7 +64,7 @@ export class TypescriptGeneratorService {
     return lines.join('\n');
   }
 
-  generateSchemaFiles(spec: ParsedSpec): GeneratedFile[] {
+  public generateSchemaFiles(spec: ParsedSpec): GeneratedFile[] {
     const schemaNames = new Set(spec.schemas.map(s => s.name));
 
     const files: GeneratedFile[] = spec.schemas.map(schema => {
@@ -102,7 +102,7 @@ export class TypescriptGeneratorService {
     return files;
   }
 
-  generateServiceFiles(spec: ParsedSpec): GeneratedFile[] {
+  public generateServiceFiles(spec: ParsedSpec): GeneratedFile[] {
     return spec.tags.map(tag => {
       const name = this.toPascalCase(tag.name);
       const content = [
@@ -179,7 +179,7 @@ export class TypescriptGeneratorService {
 
   // ── Type mapping ────────────────────────────────────────────────────────────
 
-  toZodType(type: ParsedType, _isRequired: boolean, isNullable = false): string {
+  public toZodType(type: ParsedType, _isRequired: boolean, isNullable = false): string {
     let result = this.zodBase(type);
     if (isNullable) result = `${result}.nullable()`;
     return result;
@@ -205,7 +205,7 @@ export class TypescriptGeneratorService {
     }
   }
 
-  toTsType(type: ParsedType): string {
+  public toTsType(type: ParsedType): string {
     if (type.isArray) return `${this.toTsType({ ...type, isArray: false })}[]`;
     switch (type.kind) {
       case 'string':                    return 'string';

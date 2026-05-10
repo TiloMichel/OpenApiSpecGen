@@ -7,14 +7,14 @@ import type { GenerationOptions, GenerationResult } from '../models/openapi.mode
 
 @Injectable({ providedIn: 'root' })
 export class CodeGeneratorService {
-  constructor(
+  public constructor(
     private parser: OpenApiParserService,
     private csharp: CsharpGeneratorService,
     private typescript: TypescriptGeneratorService,
     private useCase: UseCaseGeneratorService,
   ) {}
 
-  generate(specContent: string, options: GenerationOptions): GenerationResult {
+  public generate(specContent: string, options: GenerationOptions): GenerationResult {
     const format = this.parser.detectFormat(specContent);
     const spec = this.parser.parse(specContent, format);
     const { splitFiles } = options;

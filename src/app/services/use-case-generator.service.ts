@@ -11,7 +11,7 @@ import type {
 
 @Injectable({ providedIn: 'root' })
 export class UseCaseGeneratorService {
-  constructor(
+  public constructor(
     private csharp: CsharpGeneratorService,
     private typescript: TypescriptGeneratorService,
   ) {}
