@@ -445,7 +445,7 @@ describe('UseCaseGeneratorService', () => {
     it('renders object schema as Zod object', () => {
       const files = service.generateUseCaseFiles(simpleSpec);
       const c = tsDoc(files, 'getPetById').content;
-      expect(c).toContain('export const PetSchema = z.object({');
+      expect(c).toContain('export const PetSchema = z.strictObject({');
       expect(c).toContain('export type Pet = z.infer<typeof PetSchema>;');
     });
 

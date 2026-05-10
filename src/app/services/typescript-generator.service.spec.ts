@@ -161,7 +161,7 @@ describe('TypescriptGeneratorService', () => {
 
     it('generates an object schema', () => {
       const output = service.generateSchemas(simpleSpec);
-      expect(output).toContain('export const PetSchema = z.object({');
+      expect(output).toContain('export const PetSchema = z.strictObject({');
       expect(output).toContain('Id: z.number().int(),');
       expect(output).toContain('Name: z.string(),');
     });
@@ -183,7 +183,7 @@ describe('TypescriptGeneratorService', () => {
         tags: [],
       };
       const output = service.generateSchemas(spec);
-      expect(output).toContain('export const EmptySchema = z.object({});');
+      expect(output).toContain('export const EmptySchema = z.strictObject({});');
     });
   });
 

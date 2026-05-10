@@ -28,7 +28,8 @@ export class TypescriptGeneratorService {
   private genZodObject(schema: ParsedSchema): string[] {
     if (schema.properties.length === 0) {
       return [
-        `export const ${schema.name}Schema = z.object({});`,
+        `export const ${schema.name}Schema = z.strictObject({});`,
+        ``,
         `export type ${schema.name} = z.infer<typeof ${schema.name}Schema>;`,
       ];
     }
@@ -36,9 +37,10 @@ export class TypescriptGeneratorService {
     const props = schema.properties.map(p => `  ${p.pascalName}: ${this.toZodType(p.type, p.isRequired, p.isNullable)},`);
 
     return [
-      `export const ${schema.name}Schema = z.object({`,
+      `export const ${schema.name}Schema = z.strictObject({`,
       ...props,
       `});`,
+      ``,
       `export type ${schema.name} = z.infer<typeof ${schema.name}Schema>;`,
     ];
   }
