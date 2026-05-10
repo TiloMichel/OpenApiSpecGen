@@ -206,14 +206,19 @@ describe('CsharpGeneratorService', () => {
       expect(output).toContain('[FromBody] Pet request');
     });
 
-    it('uses IActionResult when no response type', () => {
+    it('uses Task when no response type', () => {
       const output = service.generateControllers(simpleSpec);
-      expect(output).toContain('public IActionResult DeletePet');
+      expect(output).toContain('public Task DeletePet');
     });
 
-    it('uses ActionResult<T> when response type present', () => {
+    it('uses Task<T> for single object response', () => {
       const output = service.generateControllers(simpleSpec);
-      expect(output).toContain('ActionResult<IReadOnlyList<Pet>>');
+      expect(output).toContain('public Task<Pet> GetPetById');
+    });
+
+    it('uses IAsyncEnumerable<T> for array response', () => {
+      const output = service.generateControllers(simpleSpec);
+      expect(output).toContain('public IAsyncEnumerable<Pet> ListPets');
     });
 
     it('includes summary as XML doc comment', () => {

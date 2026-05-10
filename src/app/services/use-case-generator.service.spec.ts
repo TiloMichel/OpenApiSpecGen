@@ -300,19 +300,19 @@ describe('UseCaseGeneratorService', () => {
       expect(csharpDoc(files, 'createPet').content).toContain('[FromBody] Pet request');
     });
 
-    it('uses ActionResult<T> when response present', () => {
+    it('uses Task<T> for single object response', () => {
       const files = service.generateUseCaseFiles(simpleSpec);
-      expect(csharpDoc(files, 'getPetById').content).toContain('ActionResult<Pet>');
+      expect(csharpDoc(files, 'getPetById').content).toContain('public Task<Pet> GetPetById');
     });
 
-    it('uses IActionResult when no response', () => {
+    it('uses Task when no response', () => {
       const files = service.generateUseCaseFiles(simpleSpec);
-      expect(csharpDoc(files, 'deletePet').content).toContain('public IActionResult DeletePet');
+      expect(csharpDoc(files, 'deletePet').content).toContain('public Task DeletePet');
     });
 
-    it('uses ActionResult<IReadOnlyList<T>> for array responses', () => {
+    it('uses IAsyncEnumerable<T> for array responses', () => {
       const files = service.generateUseCaseFiles(simpleSpec);
-      expect(csharpDoc(files, 'listPets').content).toContain('ActionResult<IReadOnlyList<Pet>>');
+      expect(csharpDoc(files, 'listPets').content).toContain('public IAsyncEnumerable<Pet> ListPets');
     });
 
     it('includes XML doc summary', () => {
