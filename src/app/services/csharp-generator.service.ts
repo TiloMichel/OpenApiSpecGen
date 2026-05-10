@@ -40,11 +40,11 @@ export class CsharpGeneratorService {
     if (schema.properties.length === 0) return [`public record ${schema.name}();`];
 
     const params = schema.properties.map((p, i) => {
-      const comma = i < schema.properties.length - 1 ? ',' : '';
-      return `    ${this.toCsType(p.type, !p.isNullable)} ${p.pascalName}${comma}`;
+      const suffix = i < schema.properties.length - 1 ? ',' : ');';
+      return `    ${this.toCsType(p.type, !p.isNullable)} ${p.pascalName}${suffix}`;
     });
 
-    return [`public record ${schema.name}(`, ...params, ');'];
+    return [`public record ${schema.name}(`, ...params];
   }
 
   // ── Controllers ─────────────────────────────────────────────────────────────
