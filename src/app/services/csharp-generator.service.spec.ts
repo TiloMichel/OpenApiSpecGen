@@ -145,6 +145,27 @@ describe('CsharpGeneratorService', () => {
       const spec: ParsedSpec = { ...simpleSpec, schemas: [{ name: 'Empty', kind: 'object', properties: [], enumValues: [] }] };
       expect(service.generateDtos(spec)).toContain('public record Empty();');
     });
+
+    it('makes non-required properties nullable regardless of isNullable', () => {
+      const spec: ParsedSpec = {
+        ...simpleSpec,
+        schemas: [{
+          name: 'Example',
+          kind: 'object',
+          enumValues: [],
+          properties: [
+            { originalName: 'req',      pascalName: 'Req',      type: { kind: 'string', isArray: false }, isRequired: true,  isNullable: false },
+            { originalName: 'opt',      pascalName: 'Opt',      type: { kind: 'int',    isArray: false }, isRequired: false, isNullable: false },
+            { originalName: 'nullable', pascalName: 'Nullable', type: { kind: 'bool',   isArray: false }, isRequired: true,  isNullable: true  },
+          ],
+        }],
+        tags: [],
+      };
+      const output = service.generateDtos(spec);
+      expect(output).toContain('string Req,');
+      expect(output).toContain('int? Opt,');
+      expect(output).toContain('bool? Nullable');
+    });
   });
 
   // ── generateDtoFiles ─────────────────────────────────────────────────────────

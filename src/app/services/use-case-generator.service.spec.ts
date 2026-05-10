@@ -357,6 +357,35 @@ describe('UseCaseGeneratorService', () => {
       const files = service.generateUseCaseFiles(spec);
       expect(csharpDoc(files, 'ping').content).not.toContain('## DTOs');
     });
+
+    it('makes non-required properties nullable in DTO output', () => {
+      const spec: ParsedSpec = {
+        ...simpleSpec,
+        schemas: [{
+          name: 'Widget',
+          kind: 'object',
+          enumValues: [],
+          properties: [
+            { originalName: 'id',    pascalName: 'Id',    type: { kind: 'int',    isArray: false }, isRequired: true,  isNullable: false },
+            { originalName: 'label', pascalName: 'Label', type: { kind: 'string', isArray: false }, isRequired: false, isNullable: false },
+          ],
+        }],
+        tags: [{
+          name: 'widgets',
+          operations: [{
+            method: 'get', path: '/widgets/{id}', operationId: 'getWidget',
+            pathParams: [{ originalName: 'id', camelName: 'id', type: { kind: 'int', isArray: false }, isRequired: true }],
+            queryParams: [],
+            requestBodyType: undefined,
+            responseType: { kind: 'ref', isArray: false, refName: 'Widget' },
+          }],
+        }],
+      };
+      const files = service.generateUseCaseFiles(spec);
+      const c = csharpDoc(files, 'getWidget').content;
+      expect(c).toContain('int Id,');
+      expect(c).toContain('string? Label');
+    });
   });
 
   // ── TypeScript file ───────────────────────────────────────────────────────────

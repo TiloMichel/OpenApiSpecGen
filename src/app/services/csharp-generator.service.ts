@@ -41,7 +41,7 @@ export class CsharpGeneratorService {
 
     const params = schema.properties.map((p, i) => {
       const suffix = i < schema.properties.length - 1 ? ',' : ');';
-      return `    ${this.toCsType(p.type, !p.isNullable)} ${p.pascalName}${suffix}`;
+      return `    ${this.toCsType(p.type, p.isRequired && !p.isNullable)} ${p.pascalName}${suffix}`;
     });
 
     return [`public record ${schema.name}(`, ...params];
