@@ -23,9 +23,9 @@ interface CustomFieldResponse {
 
 @Injectable({ providedIn: 'root' })
 export class YouTrackService {
-  constructor(private http: HttpClient) {}
+  public constructor(private http: HttpClient) {}
 
-  async getProjects(config: YouTrackConfig): Promise<YouTrackProject[]> {
+  public async getProjects(config: YouTrackConfig): Promise<YouTrackProject[]> {
     return firstValueFrom(
       this.http.get<YouTrackProject[]>(
         `${this.getApiBase(config)}/api/admin/projects?fields=id,name,shortName`,
@@ -34,7 +34,7 @@ export class YouTrackService {
     );
   }
 
-  async getIssueTypes(config: YouTrackConfig, projectId: string): Promise<YouTrackIssueType[]> {
+  public async getIssueTypes(config: YouTrackConfig, projectId: string): Promise<YouTrackIssueType[]> {
     const fields = await firstValueFrom(
       this.http.get<CustomFieldResponse[]>(
         `${this.getApiBase(config)}/api/admin/projects/${projectId}/customFields?fields=id,field(id,name),bundle(values(id,name))`,
@@ -44,7 +44,7 @@ export class YouTrackService {
     return fields.find(f => f.field?.name === 'Type')?.bundle?.values ?? [];
   }
 
-  buildStagedIssues(useCaseFiles: GeneratedFile[]): YouTrackStagedIssue[] {
+  public buildStagedIssues(useCaseFiles: GeneratedFile[]): YouTrackStagedIssue[] {
     return useCaseFiles.map(file => {
       let opId: string;
       let fileType: 'overview' | 'csharp' | 'typescript';
@@ -72,7 +72,7 @@ export class YouTrackService {
     });
   }
 
-  async createUseCaseIssues(
+  public async createUseCaseIssues(
     config: YouTrackConfig,
     staged: YouTrackStagedIssue[],
   ): Promise<YouTrackIssueResult[]> {

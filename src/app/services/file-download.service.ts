@@ -5,11 +5,11 @@ import type { GenerationResult } from '../models/openapi.model';
 @Injectable({ providedIn: 'root' })
 export class FileDownloadService {
 
-  downloadText(content: string, filename: string): void {
+  public downloadText(content: string, filename: string): void {
     this.trigger(new Blob([content], { type: 'text/plain' }), filename);
   }
 
-  async downloadZip(result: GenerationResult, specContent: string, specFilename: string): Promise<void> {
+  public async downloadZip(result: GenerationResult, specContent: string, specFilename: string): Promise<void> {
     const zip = new JSZip();
     const allFiles = [
       ...result.csharpDtoFiles,

@@ -169,18 +169,18 @@ paths:
   styleUrl: './app.scss',
 })
 export class App {
-  private generator = inject(CodeGeneratorService);
-  private downloader = inject(FileDownloadService);
-  private youTrack = inject(YouTrackService);
-  private snackBar = inject(MatSnackBar);
+  private readonly generator = inject(CodeGeneratorService);
+  private readonly downloader = inject(FileDownloadService);
+  private readonly youTrack = inject(YouTrackService);
+  private readonly snackBar = inject(MatSnackBar);
 
-  darkMode = signal<boolean>(
+  protected darkMode = signal<boolean>(
     localStorage.getItem('darkMode') !== null
       ? localStorage.getItem('darkMode') === 'dark'
-      : window.matchMedia('(prefers-color-scheme: dark)').matches
+      : window.matchMedia('(prefers-color-scheme: dark)').matches,
   );
 
-  constructor() {
+  public constructor() {
     effect(() => {
       const dark = this.darkMode();
       document.body.classList.toggle('dark', dark);
@@ -189,16 +189,16 @@ export class App {
     });
   }
 
-  toggleDarkMode(): void {
+  protected toggleDarkMode(): void {
     this.darkMode.update(v => !v);
   }
 
-  specContent = signal<string>('');
-  specFilename = signal<string>('spec.yaml');
-  result = signal<GenerationResult | null>(null);
-  isDragOver = signal<boolean>(false);
+  protected specContent = signal<string>('');
+  protected specFilename = signal<string>('spec.yaml');
+  protected result = signal<GenerationResult | null>(null);
+  protected isDragOver = signal<boolean>(false);
 
-  options = signal<GenerationOptions>({
+  protected options = signal<GenerationOptions>({
     includeCsharpDtos: true,
     includeCsharpControllers: true,
     includeTypescriptSchemas: true,
@@ -207,73 +207,79 @@ export class App {
     includeUseCaseDocs: false,
   });
 
-  selectedDtoFile = signal(0);
-  selectedControllerFile = signal(0);
-  selectedSchemaFile = signal(0);
-  selectedServiceFile = signal(0);
-  selectedUseCaseFile = signal(0);
+  protected selectedDtoFile = signal(0);
+  protected selectedControllerFile = signal(0);
+  protected selectedSchemaFile = signal(0);
+  protected selectedServiceFile = signal(0);
+  protected selectedUseCaseFile = signal(0);
 
-  youTrackConfig = signal<YouTrackConfig>({
+  protected youTrackConfig = signal<YouTrackConfig>({
     url: localStorage.getItem('youtrackUrl') ?? '',
     token: '',
     projectId: localStorage.getItem('youtrackProjectId') ?? '',
     useProxy: localStorage.getItem('youtrackUseProxy') !== 'false',
   });
-  youTrackProjects = signal<YouTrackProject[]>([]);
-  youTrackIssueTypes = signal<YouTrackIssueType[]>([]);
-  youTrackProjectsLoading = signal(false);
-  youTrackIssueTypesLoading = signal(false);
-  youTrackResults = signal<YouTrackIssueResult[] | null>(null);
-  youTrackLoading = signal(false);
-  stagedIssues = signal<YouTrackStagedIssue[]>([]);
+  protected youTrackProjects = signal<YouTrackProject[]>([]);
+  protected youTrackIssueTypes = signal<YouTrackIssueType[]>([]);
+  protected youTrackProjectsLoading = signal(false);
+  protected youTrackIssueTypesLoading = signal(false);
+  protected youTrackResults = signal<YouTrackIssueResult[] | null>(null);
+  protected youTrackLoading = signal(false);
+  protected stagedIssues = signal<YouTrackStagedIssue[]>([]);
 
-  readonly stagedIssueColumns = ['select', 'operation', 'file', 'summary', 'issueType'];
-  readonly trackByStagedIssue = (_: number, item: YouTrackStagedIssue) => item.id;
+  protected readonly stagedIssueColumns = ['select', 'operation', 'file', 'summary', 'issueType'];
+  protected readonly trackByStagedIssue = (_: number, item: YouTrackStagedIssue) => item.id;
 
-  useCaseCount = computed(() =>
-    (this.result()?.useCaseFiles ?? []).filter(f => !f.filename.includes('/')).length
+  protected useCaseCount = computed(() =>
+    (this.result()?.useCaseFiles ?? []).filter(f => !f.filename.includes('/')).length,
   );
-  allIssuesSelected = computed(() => {
+  protected allIssuesSelected = computed(() => {
     const issues = this.stagedIssues();
     return issues.length > 0 && issues.every(i => i.selected);
   });
-  someIssuesSelected = computed(() =>
-    this.stagedIssues().some(i => i.selected) && !this.allIssuesSelected()
+  protected someIssuesSelected = computed(
+    () => this.stagedIssues().some(i => i.selected) && !this.allIssuesSelected(),
   );
-  selectedIssueCount = computed(() => this.stagedIssues().filter(i => i.selected).length);
+  protected selectedIssueCount = computed(() => this.stagedIssues().filter(i => i.selected).length);
 
-  hasAnyOption = computed(() => {
+  protected hasAnyOption = computed(() => {
     const o = this.options();
-    return o.includeCsharpDtos || o.includeCsharpControllers || o.includeTypescriptSchemas || o.includeTypescriptServices || o.includeUseCaseDocs;
+    return (
+      o.includeCsharpDtos ||
+      o.includeCsharpControllers ||
+      o.includeTypescriptSchemas ||
+      o.includeTypescriptServices ||
+      o.includeUseCaseDocs
+    );
   });
 
-  setOption<K extends keyof GenerationOptions>(key: K, value: GenerationOptions[K]): void {
+  protected setOption<K extends keyof GenerationOptions>(key: K, value: GenerationOptions[K]): void {
     this.options.update(o => ({ ...o, [key]: value }));
     this.result.set(null);
   }
 
-  onFileSelected(event: Event): void {
+  protected onFileSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];
     if (file) this.loadFile(file);
     input.value = '';
   }
 
-  onSpecContentChange(content: string): void {
+  protected onSpecContentChange(content: string): void {
     this.specContent.set(content);
     this.result.set(null);
   }
 
-  onDragOver(event: DragEvent): void {
+  protected onDragOver(event: DragEvent): void {
     event.preventDefault();
     this.isDragOver.set(true);
   }
 
-  onDragLeave(): void {
+  protected onDragLeave(): void {
     this.isDragOver.set(false);
   }
 
-  onDrop(event: DragEvent): void {
+  protected onDrop(event: DragEvent): void {
     event.preventDefault();
     this.isDragOver.set(false);
     const file = event.dataTransfer?.files?.[0];
@@ -303,7 +309,7 @@ export class App {
     }
   }
 
-  generate(): void {
+  protected generate(): void {
     try {
       const result = this.generator.generate(this.specContent(), this.options());
       this.result.set(result);
@@ -316,7 +322,9 @@ export class App {
         const staged = this.youTrack.buildStagedIssues(result.useCaseFiles);
         const types = this.youTrackIssueTypes();
         if (types.length > 0) {
-          staged.forEach(s => { s.issueTypeId = types[0].id; });
+          staged.forEach(s => {
+            s.issueTypeId = types[0].id;
+          });
         }
         this.stagedIssues.set(staged);
       } else {
@@ -329,21 +337,21 @@ export class App {
     }
   }
 
-  downloadSpec(): void {
+  protected downloadSpec(): void {
     this.downloader.downloadText(this.specContent(), this.specFilename());
   }
 
-  downloadFile(content: string, filename: string): void {
+  protected downloadFile(content: string, filename: string): void {
     this.downloader.downloadText(content, filename);
   }
 
-  async downloadAll(): Promise<void> {
+  protected async downloadAll(): Promise<void> {
     const result = this.result();
     if (!result) return;
     await this.downloader.downloadZip(result, this.specContent(), this.specFilename());
   }
 
-  updateResultFile(
+  protected updateResultFile(
     key: 'csharpDtoFiles' | 'csharpControllerFiles' | 'typescriptSchemaFiles' | 'typescriptServiceFiles' | 'useCaseFiles',
     index: number,
     content: string,
@@ -356,20 +364,18 @@ export class App {
     });
   }
 
-  copyToClipboard(content: string): void {
-    navigator.clipboard.writeText(content).then(
-      () => this.snackBar.open('Copied!', 'OK', { duration: 2000 }),
-    );
+  protected copyToClipboard(content: string): void {
+    navigator.clipboard.writeText(content).then(() => this.snackBar.open('Copied!', 'OK', { duration: 2000 }));
   }
 
-  loadExample(): void {
+  protected loadExample(): void {
     this.specContent.set(this.formatSpec(EXAMPLE_SPEC, 'example.yaml'));
     this.specFilename.set('example.yaml');
     this.result.set(null);
     this.snackBar.open('Example spec loaded', 'OK', { duration: 2000 });
   }
 
-  setYouTrackConfig<K extends keyof YouTrackConfig>(key: K, value: YouTrackConfig[K]): void {
+  protected setYouTrackConfig<K extends keyof YouTrackConfig>(key: K, value: YouTrackConfig[K]): void {
     this.youTrackConfig.update(c => {
       if (key === 'url') localStorage.setItem('youtrackUrl', value as string);
       if (key === 'projectId') localStorage.setItem('youtrackProjectId', value as string);
@@ -378,7 +384,7 @@ export class App {
     });
   }
 
-  async loadYouTrackProjects(): Promise<void> {
+  protected async loadYouTrackProjects(): Promise<void> {
     this.youTrackProjectsLoading.set(true);
     try {
       const projects = await this.youTrack.getProjects(this.youTrackConfig());
@@ -390,14 +396,15 @@ export class App {
     } catch (e: unknown) {
       this.snackBar.open(
         `Failed to load projects: ${e instanceof Error ? e.message : String(e)}`,
-        'OK', { duration: 6000 },
+        'OK',
+        { duration: 6000 },
       );
     } finally {
       this.youTrackProjectsLoading.set(false);
     }
   }
 
-  async onYouTrackProjectChange(projectId: string): Promise<void> {
+  protected async onYouTrackProjectChange(projectId: string): Promise<void> {
     this.setYouTrackConfig('projectId', projectId);
     await this.loadYouTrackIssueTypes(projectId);
   }
@@ -407,37 +414,38 @@ export class App {
     this.youTrackIssueTypesLoading.set(true);
     try {
       const types = await this.youTrack.getIssueTypes(this.youTrackConfig(), projectId);
-      console.log('youtrack types')
+      console.log('youtrack types');
       console.log(types);
       this.youTrackIssueTypes.set(types);
       if (types.length > 0) {
         this.stagedIssues.update(issues =>
-          issues.map(i => ({ ...i, issueTypeId: i.issueTypeId || types[0].id }))
+          issues.map(i => ({ ...i, issueTypeId: i.issueTypeId || types[0].id })),
         );
       }
     } catch (e: unknown) {
       this.snackBar.open(
         `Failed to load "Typ" field: ${e instanceof Error ? e.message : String(e)}`,
-        'OK', { duration: 6000 },
+        'OK',
+        { duration: 6000 },
       );
     } finally {
       this.youTrackIssueTypesLoading.set(false);
     }
   }
 
-  setStagedIssueSelected(id: string, selected: boolean): void {
-    this.stagedIssues.update(issues => issues.map(i => i.id === id ? { ...i, selected } : i));
+  protected setStagedIssueSelected(id: string, selected: boolean): void {
+    this.stagedIssues.update(issues => issues.map(i => (i.id === id ? { ...i, selected } : i)));
   }
 
-  setStagedIssueType(id: string, issueTypeId: string): void {
-    this.stagedIssues.update(issues => issues.map(i => i.id === id ? { ...i, issueTypeId } : i));
+  protected setStagedIssueType(id: string, issueTypeId: string): void {
+    this.stagedIssues.update(issues => issues.map(i => (i.id === id ? { ...i, issueTypeId } : i)));
   }
 
-  selectAllIssues(selected: boolean): void {
+  protected selectAllIssues(selected: boolean): void {
     this.stagedIssues.update(issues => issues.map(i => ({ ...i, selected })));
   }
 
-  async createYouTrackIssues(): Promise<void> {
+  protected async createYouTrackIssues(): Promise<void> {
     const staged = this.stagedIssues();
     if (!staged.some(s => s.selected)) return;
     this.youTrackLoading.set(true);
@@ -448,7 +456,11 @@ export class App {
       const ok = results.filter(r => r.success).length;
       this.snackBar.open(`Created ${ok} of ${results.length} issues`, 'OK', { duration: 4000 });
     } catch (e: unknown) {
-      this.snackBar.open(`YouTrack error: ${e instanceof Error ? e.message : String(e)}`, 'OK', { duration: 6000 });
+      this.snackBar.open(
+        `YouTrack error: ${e instanceof Error ? e.message : String(e)}`,
+        'OK',
+        { duration: 6000 },
+      );
     } finally {
       this.youTrackLoading.set(false);
     }

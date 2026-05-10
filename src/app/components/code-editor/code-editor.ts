@@ -42,20 +42,20 @@ const BASE_THEME = EditorView.theme({
   styleUrl: './code-editor.scss',
 })
 export class CodeEditorComponent implements AfterViewInit, OnDestroy {
-  @ViewChild('editorHost', { static: true }) editorHost!: ElementRef<HTMLDivElement>;
+  @ViewChild('editorHost', { static: true }) protected editorHost!: ElementRef<HTMLDivElement>;
 
-  content  = input<string>('');
-  language = input<CodeLanguage>('typescript');
-  darkMode = input<boolean>(false);
+  public content  = input<string>('');
+  public language = input<CodeLanguage>('typescript');
+  public darkMode = input<boolean>(false);
 
-  contentChange = output<string>();
+  public contentChange = output<string>();
 
   private editor?: EditorView;
-  private langConf  = new Compartment();
-  private themeConf = new Compartment();
+  private readonly langConf  = new Compartment();
+  private readonly themeConf = new Compartment();
   private externalUpdate = false;
 
-  constructor() {
+  public constructor() {
     effect(() => {
       const newContent = this.content();
       if (!this.editor) return;
@@ -82,7 +82,7 @@ export class CodeEditorComponent implements AfterViewInit, OnDestroy {
     });
   }
 
-  ngAfterViewInit(): void {
+  public ngAfterViewInit(): void {
     this.editor = new EditorView({
       state: EditorState.create({
         doc: this.content(),
@@ -102,11 +102,11 @@ export class CodeEditorComponent implements AfterViewInit, OnDestroy {
     });
   }
 
-  ngOnDestroy(): void {
+  public ngOnDestroy(): void {
     this.editor?.destroy();
   }
 
-  private langExtension(lang: CodeLanguage) {
+  private langExtension(lang: CodeLanguage): ReturnType<typeof javascript> | ReturnType<typeof StreamLanguage.define> | never[] {
     if (lang === 'typescript') return javascript({ typescript: true });
     if (lang === 'csharp') return StreamLanguage.define(csharp);
     return [];

@@ -3,13 +3,13 @@ import * as yaml from 'js-yaml';
 import type {
   ParsedSpec, ParsedSchema, ParsedProperty, ParsedType, ParsedTypeKind,
   ParsedTag, ParsedOperation, ParsedParam,
-  RawOpenApiSpec, RawSchema, RawOperation, RawParameter,
+  RawOpenApiSpec, RawSchema, RawOperation, RawParameter, RawPathItem,
 } from '../models/openapi.model';
 
 @Injectable({ providedIn: 'root' })
 export class OpenApiParserService {
 
-  parse(content: string, format: 'yaml' | 'json'): ParsedSpec {
+  public parse(content: string, format: 'yaml' | 'json'): ParsedSpec {
     const raw: RawOpenApiSpec = format === 'yaml'
       ? (yaml.load(content) as RawOpenApiSpec)
       : JSON.parse(content);
@@ -87,7 +87,7 @@ export class OpenApiParserService {
 
   // ── Path / operation parsing ────────────────────────────────────────────────
 
-  private parsePaths(paths: Record<string, any>, all: Record<string, RawSchema>): ParsedTag[] {
+  private parsePaths(paths: Record<string, RawPathItem>, all: Record<string, RawSchema>): ParsedTag[] {
     const tagMap = new Map<string, ParsedOperation[]>();
     const methods = ['get', 'post', 'put', 'patch', 'delete'] as const;
 
@@ -158,17 +158,17 @@ export class OpenApiParserService {
     return ref.split('/').pop() ?? ref;
   }
 
-  toPascalCase(str: string): string {
+  public toPascalCase(str: string): string {
     return str.replace(/[-_\s]+(.)/g, (_, c) => (c as string).toUpperCase())
               .replace(/^(.)/, (_, c) => (c as string).toUpperCase());
   }
 
-  toCamelCase(str: string): string {
+  public toCamelCase(str: string): string {
     const p = this.toPascalCase(str);
     return p.charAt(0).toLowerCase() + p.slice(1);
   }
 
-  detectFormat(content: string): 'yaml' | 'json' {
+  public detectFormat(content: string): 'yaml' | 'json' {
     const t = content.trim();
     return t.startsWith('{') || t.startsWith('[') ? 'json' : 'yaml';
   }
