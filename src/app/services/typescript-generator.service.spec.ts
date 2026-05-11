@@ -326,6 +326,24 @@ describe('TypescriptGeneratorService', () => {
       const output = service.generateServices(simpleSpec);
       expect(output).toContain('/** List all pets */');
     });
+
+    it('generates Observable<T | null> for nullable response type', () => {
+      const spec: ParsedSpec = {
+        ...simpleSpec,
+        tags: [{
+          name: 'pets',
+          operations: [{
+            method: 'get', path: '/pets/{petId}', operationId: 'getPetById',
+            pathParams: [{ originalName: 'petId', camelName: 'petId', type: { kind: 'int', isArray: false }, isRequired: true }],
+            queryParams: [], requestBodyType: undefined,
+            responseType: { kind: 'ref', isArray: false, refName: 'Pet', isNullable: true },
+          }],
+        }],
+      };
+      const output = service.generateServices(spec);
+      expect(output).toContain('public getPetById(petId: number): Observable<Schemas.Pet | null>');
+      expect(output).toContain('return this.http.get<Schemas.Pet | null>(`/pets/${petId}`);');
+    });
   });
 
   // ── generateServiceFiles ─────────────────────────────────────────────────────

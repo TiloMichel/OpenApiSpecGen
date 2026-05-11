@@ -60,6 +60,13 @@ export class OpenApiParserService {
   }
 
   private parseType(schema: RawSchema, all: Record<string, RawSchema>): ParsedType {
+    if (schema.oneOf) {
+      const nonNull = schema.oneOf.filter(s => s.type !== 'null');
+      const hasNull = nonNull.length < schema.oneOf.length;
+      if (hasNull && nonNull.length === 1) {
+        return { ...this.parseType(nonNull[0], all), isNullable: true };
+      }
+    }
     if (schema.$ref) {
       const name = this.refName(schema.$ref);
       const refSchema = all[name];

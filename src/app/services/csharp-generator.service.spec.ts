@@ -247,6 +247,23 @@ describe('CsharpGeneratorService', () => {
       expect(output).toContain('public Task<Pet> GetPetById');
     });
 
+    it('uses Task<T?> for nullable response type', () => {
+      const spec: ParsedSpec = {
+        ...simpleSpec,
+        tags: [{
+          name: 'pets',
+          operations: [{
+            method: 'get', path: '/pets/{petId}', operationId: 'getPetById',
+            pathParams: [{ originalName: 'petId', camelName: 'petId', type: { kind: 'int', isArray: false }, isRequired: true }],
+            queryParams: [], requestBodyType: undefined,
+            responseType: { kind: 'ref', isArray: false, refName: 'Pet', isNullable: true },
+          }],
+        }],
+      };
+      const output = service.generateControllers(spec);
+      expect(output).toContain('public Task<Pet?> GetPetById');
+    });
+
     it('uses IAsyncEnumerable<T> for array response', () => {
       const output = service.generateControllers(simpleSpec);
       expect(output).toContain('public IAsyncEnumerable<Pet> ListPets');

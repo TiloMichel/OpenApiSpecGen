@@ -227,8 +227,8 @@ export class TypescriptGeneratorService {
 
   private toSchemasType(type: ParsedType): string {
     if (type.isArray) return `${this.toSchemasType({ ...type, isArray: false })}[]`;
-    if (type.kind === 'ref') return `Schemas.${type.refName}`;
-    return this.toTsType(type);
+    const base = type.kind === 'ref' ? `Schemas.${type.refName}` : this.toTsType(type);
+    return type.isNullable ? `${base} | null` : base;
   }
 
   // ── Helpers ─────────────────────────────────────────────────────────────────

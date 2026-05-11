@@ -14,6 +14,7 @@ export interface RawSchema {
   enum?: (string | number)[];
   $ref?: string;
   allOf?: RawSchema[];
+  oneOf?: RawSchema[];
   nullable?: boolean;
   description?: string;
 }
@@ -71,6 +72,7 @@ export type ParsedTypeKind = 'string' | 'uuid' | 'byte' | 'date-time' | 'int' | 
 export interface ParsedType {
   kind: ParsedTypeKind;
   isArray: boolean;
+  isNullable?: boolean;
   refName?: string;
   enumValues?: string[];
 }
