@@ -155,8 +155,10 @@ export class CsharpGeneratorService {
 
   private csBase(type: ParsedType): string {
     switch (type.kind) {
-      case 'string': return 'string';
-      case 'uuid':   return 'Guid';
+      case 'string':    return 'string';
+      case 'uuid':      return 'Guid';
+      case 'byte':      return 'byte[]';
+      case 'date-time': return 'DateTimeOffset';
       case 'int':    return 'int';
       case 'long':   return 'long';
       case 'float':  return 'float';

@@ -220,6 +220,16 @@ describe('OpenApiParserService', () => {
       expect(t.kind).toBe('enum');
       expect(t.enumValues).toEqual(['a', 'b']);
     });
+
+    it('maps string format byte to byte kind', () => {
+      const t = service.parse(schemaWithProp({ type: 'string', format: 'byte' }), 'json').schemas[0].properties[0].type;
+      expect(t.kind).toBe('byte');
+    });
+
+    it('maps string format date-time to date-time kind', () => {
+      const t = service.parse(schemaWithProp({ type: 'string', format: 'date-time' }), 'json').schemas[0].properties[0].type;
+      expect(t.kind).toBe('date-time');
+    });
   });
 
   // ── parse – paths ────────────────────────────────────────────────────────────

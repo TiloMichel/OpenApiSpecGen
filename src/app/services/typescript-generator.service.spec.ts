@@ -95,6 +95,8 @@ describe('TypescriptGeneratorService', () => {
     }
 
     it('maps string', () => expect(service.toZodType(t('string'), true)).toBe('z.string()'));
+    it('maps byte to z.string()', () => expect(service.toZodType(t('byte'), true)).toBe('z.string()'));
+    it('maps date-time to z.string().datetime({offset: true})', () => expect(service.toZodType(t('date-time'), true)).toBe('z.string().datetime({offset: true})'));
     it('maps int', () => expect(service.toZodType(t('int'), true)).toBe('z.number().int()'));
     it('maps long', () => expect(service.toZodType(t('long'), true)).toBe('z.number().int()'));
     it('maps float', () => expect(service.toZodType(t('float'), true)).toBe('z.number()'));
@@ -139,6 +141,8 @@ describe('TypescriptGeneratorService', () => {
     }
 
     it('maps string', () => expect(service.toTsType(t('string'))).toBe('string'));
+    it('maps byte to string', () => expect(service.toTsType(t('byte'))).toBe('string'));
+    it('maps date-time to string', () => expect(service.toTsType(t('date-time'))).toBe('string'));
     it('maps int/long/float/double to number', () => {
       expect(service.toTsType(t('int'))).toBe('number');
       expect(service.toTsType(t('long'))).toBe('number');

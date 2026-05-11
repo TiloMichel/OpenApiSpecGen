@@ -77,7 +77,11 @@ export class OpenApiParserService {
 
   private primitiveKind(schema: RawSchema): ParsedTypeKind {
     switch (schema.type) {
-      case 'string':  return schema.format === 'uuid' ? 'uuid' : 'string';
+      case 'string':
+        if (schema.format === 'uuid') return 'uuid';
+        if (schema.format === 'byte') return 'byte';
+        if (schema.format === 'date-time') return 'date-time';
+        return 'string';
       case 'boolean': return 'bool';
       case 'integer': return schema.format === 'int64' ? 'long' : 'int';
       case 'number':  return schema.format === 'float' ? 'float' : 'double';
