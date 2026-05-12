@@ -232,6 +232,42 @@ describe('OpenApiParserService', () => {
     });
   });
 
+  // ── parse – response oneOf null ──────────────────────────────────────────────
+
+  describe('parse – response oneOf null', () => {
+    function specWithResponseOneOf(...oneOf: object[]) {
+      return JSON.stringify({
+        openapi: '3.0.0',
+        info: { title: 'T', version: '1' },
+        paths: {
+          '/items/{id}': {
+            get: {
+              tags: ['items'],
+              operationId: 'getItem',
+              parameters: [],
+              responses: { '200': { content: { 'application/json': { schema: { oneOf } } } } },
+            },
+          },
+        },
+        components: { schemas: { Item: { type: 'object', properties: {} } } },
+      });
+    }
+
+    it('sets isNullable on response type when oneOf contains a $ref and null', () => {
+      const spec = service.parse(specWithResponseOneOf({ $ref: '#/components/schemas/Item' }, { type: 'null' }), 'json');
+      const op = spec.tags[0].operations[0];
+      expect(op.responseType?.kind).toBe('ref');
+      expect(op.responseType?.refName).toBe('Item');
+      expect(op.responseType?.isNullable).toBe(true);
+    });
+
+    it('does not set isNullable when oneOf has no null entry', () => {
+      const spec = service.parse(specWithResponseOneOf({ $ref: '#/components/schemas/Item' }), 'json');
+      const op = spec.tags[0].operations[0];
+      expect(op.responseType?.isNullable).toBeFalsy();
+    });
+  });
+
   // ── parse – paths ────────────────────────────────────────────────────────────
 
   describe('parse – paths', () => {

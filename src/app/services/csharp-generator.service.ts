@@ -122,7 +122,7 @@ export class CsharpGeneratorService {
       const inner = this.toCsType({ ...op.responseType, isArray: false }, true);
       return `IAsyncEnumerable<${inner}>`;
     }
-    return `Task<${this.toCsType(op.responseType, true)}>`;
+    return `Task<${this.toCsType(op.responseType, !op.responseType.isNullable)}>`;
   }
 
   private relativeRoute(fullPath: string, base: string): string {
