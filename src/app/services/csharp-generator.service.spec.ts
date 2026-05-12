@@ -93,6 +93,16 @@ describe('CsharpGeneratorService', () => {
       expect(service.toCsType(t('bool'), true)).toBe('bool');
     });
 
+    it('maps byte to byte[]', () => {
+      expect(service.toCsType(t('byte'), true)).toBe('byte[]');
+      expect(service.toCsType(t('byte'), false)).toBe('byte[]?');
+    });
+
+    it('maps date-time to DateTimeOffset', () => {
+      expect(service.toCsType(t('date-time'), true)).toBe('DateTimeOffset');
+      expect(service.toCsType(t('date-time'), false)).toBe('DateTimeOffset?');
+    });
+
     it('appends ? for optional primitives', () => {
       expect(service.toCsType(t('int'), false)).toBe('int?');
       expect(service.toCsType(t('bool'), false)).toBe('bool?');

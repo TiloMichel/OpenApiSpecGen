@@ -193,8 +193,10 @@ export class TypescriptGeneratorService {
     if (type.isArray) return `z.array(${this.zodBase({ ...type, isArray: false })})`;
 
     switch (type.kind) {
-      case 'string': return 'z.string()';
-      case 'uuid':   return 'z.string().uuid()';
+      case 'string':    return 'z.string()';
+      case 'uuid':      return 'z.string().uuid()';
+      case 'byte':      return 'z.string()';
+      case 'date-time': return 'z.string().datetime({offset: true})';
       case 'int':
       case 'long':   return 'z.number().int()';
       case 'float':
@@ -213,7 +215,7 @@ export class TypescriptGeneratorService {
   public toTsType(type: ParsedType): string {
     if (type.isArray) return `${this.toTsType({ ...type, isArray: false })}[]`;
     switch (type.kind) {
-      case 'string': case 'uuid':        return 'string';
+      case 'string': case 'uuid': case 'byte': case 'date-time': return 'string';
       case 'int': case 'long':
       case 'float': case 'double':      return 'number';
       case 'bool':                      return 'boolean';
